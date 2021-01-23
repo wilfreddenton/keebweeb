@@ -55,7 +55,7 @@ function Cursor() {
   return outerSpan
 }
 
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const text = `The sky above the port was the color of television, tuned to a dead channel.`
   const leader = document.getElementById('leader')
   const frag = document.createDocumentFragment()
@@ -72,11 +72,12 @@ window.addEventListener('load', () => {
   leader.appendChild(frag)
 
   let index = 0
+  let modifierDown = false
   const cursor = new Cursor()
   leaderChars[index].insertBefore(cursor)
   const cursorPhaseParams = [() => cursor.classList.toggle('hide'), 530]
   cursorPhaseInterval = setInterval(...cursorPhaseParams)
-  window.addEventListener('click', e => {
+  document.addEventListener('click', e => {
     leader.classList.remove('focused')
     clearInterval(cursorPhaseInterval)
     cursor.classList.add('hide')
@@ -88,9 +89,9 @@ window.addEventListener('load', () => {
     cursorPhaseInterval = setInterval(...cursorPhaseParams)
   })
   typingTimeout = null
-  window.addEventListener('keydown', e => {
+  document.addEventListener('keydown', e => {
+    if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
     if (!leader.classList.contains('focused')) return
-    if (!/^.$|^Backspace$/.test(e.key)) return
     if (index >= text.length) return
 
     console.log(index, e)
@@ -98,15 +99,14 @@ window.addEventListener('load', () => {
     clearTimeout(typingTimeout)
     cursor.classList.remove('hide')
     let cc = null
-    switch(e.key) {
-    case "Backspace":
+    if (e.key === "Backspace") {
       if (index < 1) return
       cc = leaderChars[index-1]
       cc.insertBefore(cursor)
       cc.revert()
       index -= 1
-      break
-    default:
+    } else {
+      if (!/^.$/.test(e.key)) return
       cc = leaderChars[index]
       cc.validate(e.key)
       index += 1
