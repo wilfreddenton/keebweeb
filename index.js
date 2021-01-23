@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation()
     leader.classList.add('focused')
     cursor.classList.remove('hide')
+    clearInterval(cursorPhaseInterval)
     cursorPhaseInterval = setInterval(...cursorPhaseParams)
   })
   typingTimeout = null
