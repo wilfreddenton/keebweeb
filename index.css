@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'noto';
+  src: url('/assets/noto_mono.woff') format('woff');
+  font-weight: normal;
+  font-style: monospace;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -5,6 +12,7 @@
 body {
   padding: 0;
   margin: 0;
+  background-color: #2C2F38;
 }
 
 #cursor {
@@ -20,54 +28,57 @@ body {
 
 #cursor > span {
   position: absolute;
+  top: 0px;
   height: 31px;
-  width: 3px;
-  background-color: black;
+  width: 4px;
+  background-color: #67C4E3;
 }
 
 #leader {
-  font-family: monospace;
   display: block;
   position: relative;
-  margin: 0 auto;
+  margin: 50px auto;
   background: none;
-  height: 150px;
   width: 100%;
-  font-size: 2rem;
+  font-family: 'noto';
+  font-size: 1.5rem;
   padding: 1rem;
-  border: 1px solid #ccc;
   user-select: none;
+  color: #6E7886;
+}
+
+#leader.focused {
 }
 
 #container {
   position: relative;
   margin: 1rem auto;
-  width: 875px;
+  max-width: 875px;
 }
 
-#leader {
-  color: #ccc
-}
-
-#leader.focused {
-  border: 1px solid blue
+.c-group {
+  height: 3rem;
 }
 
 .cc {
-  display: inline-block
+  display: inline-block;
 }
 
 .cc.hide {
-  opacity: 0
+  opacity: 0;
 }
 
 .cc.incorrect {
-  background: red;
-  color: white;
+  color: #CE4F68;
+}
+
+.cc.space.incorrect {
+  border-bottom: 4px solid #CE4F68;
+  /* margin-bottom: -4px; */
 }
 
 .cc.correct {
-  color: black;
+  color: #67C4E3;
 }
 
 .c-group {

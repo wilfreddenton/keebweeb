@@ -19,6 +19,7 @@ class CC { // stands for Controlled Character
   }
 
   revert() {
+    this._element.classList.remove('space')
     this._element.classList.remove('correct')
     this._element.classList.remove('incorrect')
     this._element.innerHTML = this._char
@@ -26,6 +27,7 @@ class CC { // stands for Controlled Character
 
   validate(c) {
     c = this._transform(c)
+    if (c === "&nbsp;") this._element.classList.add('space')
     this._element.classList.add(this._char === c ? 'correct' : 'incorrect')
     this._element.innerHTML = c
   }
@@ -60,7 +62,6 @@ window.addEventListener('load', () => {
   const leaderChars = []
   let cGroup = null
   text.split("").forEach(c => {
-    if (c === " ") cGroup = null
     if (cGroup === null) cGroup = CGroup()
     const cc = new CC(c)
     cc.appendElementTo(cGroup)
