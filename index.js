@@ -57,66 +57,71 @@ function Cursor() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const text = `The sky above the port was the color of television, tuned to a dead channel.`
-  const leader = document.getElementById('leader')
-  const frag = document.createDocumentFragment()
-  const leaderChars = []
+  const elements = {
+    leader: document.getElementById('leader'),
+    cursor: new Cursor(),
+  }
+  const cursorIntervalParams = [() => elements.cursor.classList.toggle('hide'), 530]
+  const state = {
+    leaderChars: [],
+    index: 0,
+    typingTimeout: null,
+    cursorInterval: null
+  }
+
+  const frag = document.createDocumentFragment();
   let cGroup = null
   text.split("").forEach(c => {
     if (cGroup === null) cGroup = CGroup()
     const cc = new CC(c)
     cc.appendElementTo(cGroup)
     frag.appendChild(cGroup)
-    leaderChars.push(cc)
+    state.leaderChars.push(cc)
     if (c === " ") cGroup = null
   })
-  leader.appendChild(frag)
+  elements.leader.appendChild(frag)
+  state.leaderChars[state.index].insertBefore(elements.cursor)
 
-  let index = 0
-  let modifierDown = false
-  const cursor = new Cursor()
-  leaderChars[index].insertBefore(cursor)
-  const cursorPhaseParams = [() => cursor.classList.toggle('hide'), 530]
-  cursorPhaseInterval = setInterval(...cursorPhaseParams)
+  state.cursorInterval = setInterval(...cursorIntervalParams)
   document.addEventListener('click', e => {
-    leader.classList.remove('focused')
-    clearInterval(cursorPhaseInterval)
-    cursor.classList.add('hide')
+    elements.leader.classList.remove('focused')
+    clearInterval(state.cursorInterval)
+    elements.cursor.classList.add('hide')
   })
   leader.addEventListener('click', e => {
     e.stopPropagation()
-    leader.classList.add('focused')
-    cursor.classList.remove('hide')
-    clearInterval(cursorPhaseInterval)
-    cursorPhaseInterval = setInterval(...cursorPhaseParams)
+    elements.leader.classList.add('focused')
+    elements.cursor.classList.remove('hide')
+    clearInterval(state.cursorInterval)
+    state.cursorInterval = setInterval(...cursorIntervalParams)
   })
-  typingTimeout = null
+
   document.addEventListener('keydown', e => {
     if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
     if (!leader.classList.contains('focused')) return
-    if (index >= text.length) return
+    if (state.index >= text.length) return
 
-    console.log(index, e)
-    clearInterval(cursorPhaseInterval)
-    clearTimeout(typingTimeout)
-    cursor.classList.remove('hide')
+    clearInterval(state.cursorInterval)
+    clearTimeout(state.typingTimeout)
+    elements.cursor.classList.remove('hide')
     let cc = null
     if (e.key === "Backspace") {
-      if (index < 1) return
-      cc = leaderChars[index-1]
+      if (state.index < 1) return
+      cc = state.leaderChars[state.index-1]
       cc.insertBefore(cursor)
       cc.revert()
-      index -= 1
+      state.index -= 1
     } else {
       if (!/^.$/.test(e.key)) return
-      cc = leaderChars[index]
+      cc = state.leaderChars[state.index]
       cc.validate(e.key)
-      index += 1
-      if (index < text.length) {
-        leaderChars[index].insertBefore(cursor)
+      state.index += 1
+      if (state.index < text.length) {
+        state.leaderChars[state.index].insertBefore(cursor)
       } else {
         cc.insertAfter(cursor)
       }
     }
-    cursorPhaseInterval = setInterval(...cursorPhaseParams)
+    state.cursorInterval = setInterval(...cursorIntervalParams)
   })
 })
