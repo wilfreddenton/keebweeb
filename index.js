@@ -52,7 +52,6 @@ class TextBox {
     this._cursor = document.createElement('span')
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
     this._cursorInterval = null
-    this._typingTimeout = null
     this._ccs = []
     this._index = 0
     this._startTime = null
@@ -110,7 +109,6 @@ class TextBox {
     if (this._index >= this._text.length) return
 
     clearInterval(this._cursorInterval)
-    clearTimeout(this._typingTimeout)
     this._cursor.classList.remove('hide')
 
     if (this._startTime === null) {
