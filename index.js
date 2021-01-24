@@ -213,10 +213,19 @@ class WPM {
 }
 
 function main() {
+  const texts = [
+    `The sky above the port was the color of television, tuned to a dead channel.`,
+    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
+    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
+    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
+    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
+  ]
+
   // document.body.classList.add('theme--80082-blu')
   document.body.classList.add('theme--cyberspace')
+
   new WPM('wpm')
-  new TextBox('text-box', `The sky above the port was the color of television, tuned to a dead channel.`)
+  new TextBox('text-box', texts[Math.floor(Math.random() * texts.length)])
 }
 
 document.addEventListener('DOMContentLoaded', () => main())
