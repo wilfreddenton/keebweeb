@@ -47,7 +47,7 @@ class CC { // stands for Controlled Character
 
 class TextBox {
   constructor(id, text) {
-    this._text = text
+    this._text = text.trim()
     this._box = document.getElementById(id)
     this._cursor = document.createElement('span')
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
@@ -55,6 +55,7 @@ class TextBox {
     this._typingTimeout = null
     this._ccs = []
     this._index = 0
+    this._startTime = null
 
     this._render()
     this._setupListeners()
@@ -112,6 +113,10 @@ class TextBox {
     clearTimeout(this._typingTimeout)
     this._cursor.classList.remove('hide')
 
+    if (this._startTime === null) {
+      this._startTime = new Date().getTime()
+    }
+
     if (key === "Backspace") {
       if (this._index < 1) return
       const cc = this._ccs[this._index-1]
@@ -135,7 +140,9 @@ class TextBox {
 }
 
 function main() {
-  new TextBox('leader', `The sky above the port was the color of television, tuned to a dead channel.`)
+  // document.body.classList.add('theme--80082-blu')
+  document.body.classList.add('theme--cyberspace')
+  new TextBox('text-box', `The sky above the port was the color of television, tuned to a dead channel.`)
 }
 
 document.addEventListener('DOMContentLoaded', () => main())
