@@ -15,6 +15,7 @@ class CC { // stands for Controlled Character
     this._char = c
     this._group = group
     this._element = span
+    this._isValid = null
   }
 
   _transform(c) {
@@ -32,8 +33,20 @@ class CC { // stands for Controlled Character
   validate(c) {
     c = this._transform(c)
     if (c === "&nbsp;") this._element.classList.add('space')
-    this._element.classList.add(this._char === c ? 'correct' : 'incorrect')
+    const isValid = this._char === c
+    this._element.classList.add(isValid ? 'correct' : 'incorrect')
     this._element.innerHTML = c
+    if (this._isValid === null) {
+      const eventName = isValid ? 'inc-entries' : 'inc-errors'
+      document.dispatchEvent(new Event(eventName))
+    } else if (!this._isValid && isValid) {
+      document.dispatchEvent(new Event('dec-errors'))
+      document.dispatchEvent(new Event('inc-entries'))
+    } else if (this._isValid && !isValid) {
+      document.dispatchEvent(new Event('dec-entries'))
+      document.dispatchEvent(new Event('inc-errors'))
+    }
+    this._isValid = isValid
   }
 
   insertBefore(element) {
@@ -80,7 +93,7 @@ class TextBox {
   }
 
   _setupListeners() {
-    document.addEventListener('click', this.unFocus)
+    document.addEventListener('click', this.unFocus.bind(this))
     this._box.addEventListener('click', e => {
       e.stopPropagation()
       this.focus()
@@ -130,6 +143,7 @@ class TextBox {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
+        document.dispatchEvent(new Event('stop'))
       }
     }
 
@@ -137,9 +151,71 @@ class TextBox {
   }
 }
 
+class WPM {
+  constructor(id) {
+    this._element = document.getElementById(id)
+    this._innerElement = document.createElement('span')
+    this._numEntries = 0
+    this._numErrors = 0
+    this._startTime = null
+    this._interval = null
+
+    this._setupListeners()
+    this._render()
+  }
+
+  _baseListener(l) {
+    return () => {
+      if (this._startTime === null) {
+        this._startTime = new Date().getTime()
+        this._interval = setInterval(() => {
+          this._render()
+        }, 100)
+      }
+      l()
+    }
+  }
+
+  _setupListeners() {
+    document.addEventListener('inc-entries', this._baseListener(() => {
+      this._numEntries += 1
+    }))
+    document.addEventListener('inc-errors', this._baseListener(() => {
+      this._numErrors += 1
+    }))
+    document.addEventListener('dec-entries', () => {
+      this._numEntries -= 1
+    })
+    document.addEventListener('dec-errors', () => {
+      this._numErrors -= 1
+    })
+    document.addEventListener('stop', () => {
+      clearInterval(this._interval)
+    })
+  }
+
+  _render() {
+    this._element.innerHTML = Math.round(this.netWPM(this._numMins()))
+  }
+
+  _numMins() {
+    return (new Date().getTime() - this._startTime) / (1000 * 60)
+  }
+
+  grossWPM(numMins) {
+    return (this._numEntries / 5) / numMins
+  }
+
+  netWPM(numMins) {
+    const wpm = this.grossWPM(numMins) - this._numErrors / numMins
+    return wpm < 0 ? 0 : wpm
+  }
+}
+
 function main() {
   // document.body.classList.add('theme--80082-blu')
   document.body.classList.add('theme--cyberspace')
+  new WPM('wpm')
   new TextBox('text-box', `The sky above the port was the color of television, tuned to a dead channel.`)
 }
 
