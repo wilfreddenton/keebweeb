@@ -273,10 +273,18 @@ class Select {
   constructor(element, labels, prefix) {
     this._element = element
     this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
-    this._selected = null
+    this._prefix = prefix
 
     this._setupListeners()
     this._render()
+  }
+
+  _getSelected() {
+    return localStorage.getItem(`${this._prefix}--selected`)
+  }
+
+  _setSelected(selected) {
+    window.localStorage.setItem(`${this._prefix}--selected`, selected)
   }
 
   _setupListeners() {
@@ -286,12 +294,14 @@ class Select {
   }
 
   _updateSelected(selected) {
-    if (this._selected !== null) {
-      document.body.classList.remove(this._selected)
+    const currentSelection = this._getSelected()
+    if (currentSelection !== null) {
+      document.body.classList.remove(currentSelection)
     }
 
-    this._selected = selected
-    document.body.classList.add(this._selected)
+    this._setSelected(selected)
+    document.body.classList.add(selected)
+    this._element.value = selected
   }
 
   _render() {
@@ -299,7 +309,7 @@ class Select {
       return `${html}<option value="${value}">${label}</option>\n`
     }, '')
 
-    this._updateSelected(this._options[0].value)
+    this._updateSelected(this._getSelected() === null ? this._options[0].value : this._getSelected())
   }
 }
 
