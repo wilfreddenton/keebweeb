@@ -1,15 +1,25 @@
 const EventIncEntries = 'kw-inc-entries',
-      EventDecEntries = 'kw-dec-entries',
       EventIncErrors = 'kw-inc-errors',
-      EventDecErrors = 'kw-dec-errors',
+      EventSubErrors = 'kw-sub-errors',
       EventStop = 'kw-stop'
 
-function emit(eventName) {
-  document.dispatchEvent(new Event(eventName))
+function emit(eventName, data) {
+  data = data || null
+  if (data === null) {
+    document.dispatchEvent(new Event(eventName))
+  } else {
+    document.dispatchEvent(new CustomEvent(eventName, {detail: data}))
+  }
 }
 
 function listen(eventName, handler) {
-  document.addEventListener(eventName, handler)
+  document.addEventListener(eventName, (e) => {
+    if (e.detail === undefined) {
+      handler()
+    } else {
+      handler(e.detail)
+    }
+  })
 }
 
 function CGroup() {
@@ -30,6 +40,7 @@ class CC { // stands for Controlled Character
     this._group = group
     this._element = span
     this._isValid = null
+    this._numErrors = 0
   }
 
   _transform(c) {
@@ -50,15 +61,12 @@ class CC { // stands for Controlled Character
     const isValid = this._char === c
     this._element.classList.add(isValid ? 'correct' : 'incorrect')
     this._element.innerHTML = c
-    if (this._isValid === null) {
-      const eventName = isValid ? EventIncEntries : EventIncErrors
-      emit(eventName)
-    } else if (!this._isValid && isValid) {
-      emit(EventDecErrors)
-      emit(EventIncEntries)
-    } else if (this._isValid && !isValid) {
-      emit(EventDecEntries)
+    emit(EventIncEntries)
+    if (!isValid) {
+      this._numErrors += 1
       emit(EventIncErrors)
+    } else if (this._isValid === false) {
+      emit(EventSubErrors, {n: this._numErrors})
     }
     this._isValid = isValid
   }
@@ -197,11 +205,8 @@ class WPM {
     listen(EventIncErrors, this._baseListener(() => {
       this._numErrors += 1
     }))
-    listen(EventDecEntries, () => {
-      this._numEntries -= 1
-    })
-    listen(EventDecErrors, () => {
-      this._numErrors -= 1
+    listen(EventSubErrors, ({n}) => {
+      this._numErrors -= n
     })
     listen(EventStop, () => {
       clearInterval(this._interval)
@@ -209,7 +214,7 @@ class WPM {
   }
 
   _render() {
-    this._element.innerHTML = Math.round(this.netWPM(this._numMins()))
+    this._element.innerHTML = `${Math.round(this.netWPM(this._numMins()))} WPM`
   }
 
   _numMins() {
@@ -226,6 +231,50 @@ class WPM {
   }
 }
 
+class Accuracy {
+  constructor(id) {
+    this._element = document.getElementById(id)
+    this._numEntries = 0
+    this._numErrors = 0
+    this._interval = null
+
+    this._setupListeners()
+    this._render()
+  }
+
+  _baseListener(l) {
+    return () => {
+      if (this._interval === null) {
+        this._interval = setInterval(() => {
+          this._render()
+        }, 100)
+      }
+      l()
+    }
+  }
+
+  _setupListeners() {
+    listen(EventIncEntries, this._baseListener(() => {
+      this._numEntries += 1
+    }))
+    listen(EventIncErrors, this._baseListener(() => {
+      this._numErrors += 1
+    }))
+    listen(EventStop, () => {
+      clearInterval(this._interval)
+    })
+  }
+
+  _render() {
+    this._element.innerHTML = `${Math.round(this.accuracy() * 100)}%`
+  }
+
+  accuracy() {
+    if (this._numEntries === 0) return 1
+    return (this._numEntries - this._numErrors) / this._numEntries
+  }
+}
+
 function main() {
   const texts = [
     `The sky above the port was the color of television, tuned to a dead channel.`,
@@ -239,6 +288,7 @@ function main() {
   document.body.classList.add('theme--cyberspace')
 
   new WPM('wpm')
+  new Accuracy('accuracy')
   new TextBox('text-box', texts[Math.floor(Math.random() * texts.length)])
 }
 
