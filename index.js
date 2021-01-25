@@ -81,9 +81,9 @@ class CC { // stands for Controlled Character
 }
 
 class TextBox {
-  constructor(id, text) {
+  constructor(element, text) {
+    this._element = element
     this._text = text.trim()
-    this._box = document.getElementById(id)
     this._cursor = document.createElement('span')
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
     this._cursorInterval = null
@@ -109,13 +109,13 @@ class TextBox {
       this._ccs.push(cc)
       if (c === " ") cGroup = null
     })
-    this._box.appendChild(frag)
+    this._element.appendChild(frag)
     this._ccs[this._index].insertBefore(this._cursor)
   }
 
   _setupListeners() {
     document.addEventListener('click', this.unFocus.bind(this))
-    this._box.addEventListener('click', e => {
+    this._element.addEventListener('click', e => {
       e.stopPropagation()
       this.focus()
     })
@@ -126,20 +126,20 @@ class TextBox {
   }
 
   focus() {
-    this._box.classList.add('focused')
+    this._element.classList.add('focused')
     this._cursor.classList.remove('hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 
   unFocus() {
-    this._box.classList.remove('focused')
+    this._element.classList.remove('focused')
     clearInterval(this._cursorInterval)
     this._cursor.classList.add('hide')
   }
 
   input(key) {
-    if (!this._box.classList.contains('focused')) return
+    if (!this._element.classList.contains('focused')) return
     if (this._index >= this._text.length) return
 
     if (key === "Backspace") {
@@ -150,7 +150,6 @@ class TextBox {
       this._index -= 1
     } else {
       if (!/^.$/.test(key)) return
-      console.log('hey')
       const cc = this._ccs[this._index]
       cc.validate(key)
       this._index += 1
@@ -169,8 +168,8 @@ class TextBox {
 }
 
 class WPM {
-  constructor(id) {
-    this._element = document.getElementById(id)
+  constructor(element) {
+    this._element = element
     this._innerElement = document.createElement('span')
     this._numEntries = 0
     this._numErrors = 0
@@ -227,8 +226,8 @@ class WPM {
 }
 
 class Accuracy {
-  constructor(id) {
-    this._element = document.getElementById(id)
+  constructor(element) {
+    this._element = element
     this._numEntries = 0
     this._numErrors = 0
     this._interval = null
@@ -270,6 +269,40 @@ class Accuracy {
   }
 }
 
+class Select {
+  constructor(element, labels, prefix) {
+    this._element = element
+    this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
+    this._selected = null
+
+    this._setupListeners()
+    this._render()
+  }
+
+  _setupListeners() {
+    this._element.addEventListener('change', e => {
+      this._updateSelected(e.target.value)
+    })
+  }
+
+  _updateSelected(selected) {
+    if (this._selected !== null) {
+      document.body.classList.remove(this._selected)
+    }
+
+    this._selected = selected
+    document.body.classList.add(this._selected)
+  }
+
+  _render() {
+    this._element.innerHTML = this._options.reduce((html, {label, value}) => {
+      return `${html}<option value="${value}">${label}</option>\n`
+    }, '')
+
+    this._updateSelected(this._options[0].value)
+  }
+}
+
 function main() {
   const texts = [
     `The sky above the port was the color of television, tuned to a dead channel.`,
@@ -279,12 +312,10 @@ function main() {
     `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
   ]
 
-  // document.body.classList.add('theme--80082-blu')
-  document.body.classList.add('theme--cyberspace')
-
-  new WPM('wpm')
-  new Accuracy('accuracy')
-  new TextBox('text-box', texts[Math.floor(Math.random() * texts.length)])
+  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace'], 'theme')
+  new WPM(document.getElementById('wpm'))
+  new Accuracy(document.getElementById('accuracy'))
+  new TextBox(document.getElementById('text-box'), texts[Math.floor(Math.random() * texts.length)])
 }
 
 document.addEventListener('DOMContentLoaded', main)
