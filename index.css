@@ -38,6 +38,12 @@ body.theme--80082-blu {
   border-color: #CE4F68;
 }
 
+.theme--80082-blu select {
+  background-color: #2C2F38;
+  color: #67C4E3;
+  border-color: #67C4E3;
+}
+
 body.theme--cyberspace {
   background-color: #222822;
 }
@@ -62,6 +68,12 @@ body.theme--cyberspace {
   border-color: #AD186B;
 }
 
+.theme--cyberspace select {
+  background-color: #222822;
+  color: #27D27F;
+  border-color: #27D27F;
+}
+
 body.theme--awaken {
   background-color: #25252F;
 }
@@ -84,6 +96,12 @@ body.theme--awaken {
 
 .theme--awaken .cc.space.incorrect {
   border-color: #EA315C;
+}
+
+.theme--awaken select {
+  background-color: #25252F;
+  color: #24E7E8;
+  border-color: #24E7E8;
 }
 
 #cursor {
@@ -128,11 +146,9 @@ body.theme--awaken {
   padding: 1rem;
 }
 
-#themes {
+select {
   outline: none;
-  background: black;
-  color: white;
-  border: none;
+  border: 1px solid black;
   padding: 0.5rem;
   margin-bottom: 2rem;
 }
