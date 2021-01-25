@@ -287,4 +287,4 @@ function main() {
   new TextBox('text-box', texts[Math.floor(Math.random() * texts.length)])
 }
 
-document.addEventListener('DOMContentLoaded', () => main())
+document.addEventListener('DOMContentLoaded', main)
