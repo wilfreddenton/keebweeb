@@ -173,6 +173,10 @@ class WPM {
     this._innerElement = document.createElement('span')
     this._numEntries = 0
     this._numErrors = 0
+    this._runningSum = 0
+    this._runningAverage = 0
+    this._runningStdDevSum = 0
+    this._numSnapshots = 0
     this._startTime = null
     this._interval = null
 
@@ -208,20 +212,32 @@ class WPM {
   }
 
   _render() {
-    this._element.innerHTML = `${Math.round(this.netWPM(this._numMins()))} WPM`
+    this._element.innerHTML = `${this._netWPM()} WPM (std dev: ${this._consistency()})`
   }
 
   _numMins() {
     return (new Date().getTime() - this._startTime) / (1000 * 60)
   }
 
-  grossWPM(numMins) {
+  _grossWPM(numMins) {
+    numMins = numMins || this._numMins()
     return (this._numEntries / 5) / numMins
   }
 
-  netWPM(numMins) {
-    const wpm = this.grossWPM(numMins) - this._numErrors / numMins
-    return wpm < 0 ? 0 : wpm
+  _netWPM() {
+    const numMins = this._numMins()
+    const wpm = Math.max(0, this._grossWPM(numMins) - this._numErrors / numMins)
+    this._numSnapshots += 1
+    this._runningSum += wpm
+    this._runningAverage = this._runningSum / this._numSnapshots
+    this._runningStdDevSum += Math.pow(wpm - this._runningAverage, 2)
+    return Math.round(wpm)
+  }
+
+  _consistency(numMins) {
+    const consistency = Math.round(Math.sqrt(this._runningStdDevSum / this._numSnapshots))
+    console.log(this._runningSum, this._runningAverage, this._runningStdDevSum, this._numSnapshots, consistency)
+    return this._numSnapshots > 0 ? consistency : 0
   }
 }
 
