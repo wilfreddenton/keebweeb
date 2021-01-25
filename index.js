@@ -89,7 +89,6 @@ class TextBox {
     this._cursorInterval = null
     this._ccs = []
     this._index = 0
-    this._startTime = null
 
     this._render()
     this._setupListeners()
@@ -143,13 +142,6 @@ class TextBox {
     if (!this._box.classList.contains('focused')) return
     if (this._index >= this._text.length) return
 
-    clearInterval(this._cursorInterval)
-    this._cursor.classList.remove('hide')
-
-    if (this._startTime === null) {
-      this._startTime = new Date().getTime()
-    }
-
     if (key === "Backspace") {
       if (this._index < 1) return
       const cc = this._ccs[this._index-1]
@@ -158,6 +150,7 @@ class TextBox {
       this._index -= 1
     } else {
       if (!/^.$/.test(key)) return
+      console.log('hey')
       const cc = this._ccs[this._index]
       cc.validate(key)
       this._index += 1
@@ -169,6 +162,8 @@ class TextBox {
       }
     }
 
+    clearInterval(this._cursorInterval)
+    this._cursor.classList.remove('hide')
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 }
