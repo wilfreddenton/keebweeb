@@ -235,9 +235,7 @@ class WPM {
   }
 
   _consistency(numMins) {
-    const consistency = Math.round(Math.sqrt(this._runningStdDevSum / this._numSnapshots))
-    console.log(this._runningSum, this._runningAverage, this._runningStdDevSum, this._numSnapshots, consistency)
-    return this._numSnapshots > 0 ? consistency : 0
+    return this._numSnapshots > 0 ? Math.round(Math.sqrt(this._runningStdDevSum / this._numSnapshots)) : 0
   }
 }
 
