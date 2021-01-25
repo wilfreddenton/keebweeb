@@ -1,3 +1,17 @@
+const EventIncEntries = 'kw-inc-entries',
+      EventDecEntries = 'kw-dec-entries',
+      EventIncErrors = 'kw-inc-errors',
+      EventDecErrors = 'kw-dec-errors',
+      EventStop = 'kw-stop'
+
+function emit(eventName) {
+  document.dispatchEvent(new Event(eventName))
+}
+
+function listen(eventName, handler) {
+  document.addEventListener(eventName, handler)
+}
+
 function CGroup() {
   const cGroup = document.createElement('span')
   cGroup.classList.add('c-group')
@@ -37,14 +51,14 @@ class CC { // stands for Controlled Character
     this._element.classList.add(isValid ? 'correct' : 'incorrect')
     this._element.innerHTML = c
     if (this._isValid === null) {
-      const eventName = isValid ? 'inc-entries' : 'inc-errors'
-      document.dispatchEvent(new Event(eventName))
+      const eventName = isValid ? EventIncEntries : EventIncErrors
+      emit(eventName)
     } else if (!this._isValid && isValid) {
-      document.dispatchEvent(new Event('dec-errors'))
-      document.dispatchEvent(new Event('inc-entries'))
+      emit(EventDecErrors)
+      emit(EventIncEntries)
     } else if (this._isValid && !isValid) {
-      document.dispatchEvent(new Event('dec-entries'))
-      document.dispatchEvent(new Event('inc-errors'))
+      emit(EventDecEntries)
+      emit(EventIncErrors)
     }
     this._isValid = isValid
   }
@@ -143,7 +157,7 @@ class TextBox {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
-        document.dispatchEvent(new Event('stop'))
+        emit(EventStop)
       }
     }
 
@@ -177,19 +191,19 @@ class WPM {
   }
 
   _setupListeners() {
-    document.addEventListener('inc-entries', this._baseListener(() => {
+    listen(EventIncEntries, this._baseListener(() => {
       this._numEntries += 1
     }))
-    document.addEventListener('inc-errors', this._baseListener(() => {
+    listen(EventIncErrors, this._baseListener(() => {
       this._numErrors += 1
     }))
-    document.addEventListener('dec-entries', () => {
+    listen(EventDecEntries, () => {
       this._numEntries -= 1
     })
-    document.addEventListener('dec-errors', () => {
+    listen(EventDecErrors, () => {
       this._numErrors -= 1
     })
-    document.addEventListener('stop', () => {
+    listen(EventStop, () => {
       clearInterval(this._interval)
     })
   }
