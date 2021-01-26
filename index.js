@@ -173,12 +173,12 @@ class WPM {
     this._innerElement = document.createElement('span')
     this._numEntries = 0
     this._numErrors = 0
+    this._grossWPM = 0
     this._netWPM = 0
     this._numMins = 0
-    this._runningSum = 0
-    this._runningAverage = 0
-    this._runningStdDevSum = 0
-    this._numSnapshots = 0
+    this._m = 0
+    this._s = 0
+    this._k = 0
     this._startTime = null
     this._interval = null
 
@@ -193,7 +193,7 @@ class WPM {
         this._interval = setInterval(() => {
           this._updateStats()
           this._render()
-        }, 100)
+        }, 1000)
       }
       l()
     }
@@ -228,17 +228,18 @@ class WPM {
 
   _updateStats() {
     this._numMins = (new Date().getTime() - this._startTime) / (1000 * 60)
-    this._numSnapshots += 1
+    this._grossWPM = this._calcGrossWPM()
     this._netWPM = this._calcNetWPM()
-    this._runningSum += this._netWPM
-    this._runningAverage = this._runningSum / this._numSnapshots
-    this._runningStdDevSum += Math.pow(this._netWPM - this._runningAverage, 2)
+    this._k += 1
+    const prevM = this._m
+    this._m += (this._grossWPM - prevM) / this._k
+    this._s += (this._grossWPM - this._m) * (this._grossWPM - prevM)
   }
 
   _consistency() {
-    const stdDev = Math.sqrt(this._runningStdDevSum / this._numSnapshots)
-    const relativeStdDev = stdDev / this._runningAverage
-    return this._numSnapshots > 0 ? Math.round((1 - relativeStdDev) * 100) : 0
+    const stdDev = Math.sqrt(this._s / (this._k - 1))
+    const relativeStdDev = stdDev / this._m
+    return this._s > 0 ? Math.round((1 - relativeStdDev) * 100) : 0
   }
 }
 
