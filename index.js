@@ -215,7 +215,7 @@ class WPM {
   }
 
   _render() {
-    this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._relativeStdDev()}%)`
+    this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._consistency()}%)`
   }
 
   _calcGrossWPM(numMins) {
@@ -235,7 +235,7 @@ class WPM {
     this._runningStdDevSum += Math.pow(this._netWPM - this._runningAverage, 2)
   }
 
-  _relativeStdDev() {
+  _consistency() {
     const stdDev = Math.sqrt(this._runningStdDevSum / this._numSnapshots)
     const relativeStdDev = stdDev / this._runningAverage
     return this._numSnapshots > 0 ? Math.round((1 - relativeStdDev) * 100) : 0
