@@ -173,6 +173,8 @@ class WPM {
     this._innerElement = document.createElement('span')
     this._numEntries = 0
     this._numErrors = 0
+    this._netWPM = 0
+    this._numMins = 0
     this._runningSum = 0
     this._runningAverage = 0
     this._runningStdDevSum = 0
@@ -189,6 +191,7 @@ class WPM {
       if (this._startTime === null) {
         this._startTime = new Date().getTime()
         this._interval = setInterval(() => {
+          this._updateStats()
           this._render()
         }, 100)
       }
@@ -212,30 +215,30 @@ class WPM {
   }
 
   _render() {
-    this._element.innerHTML = `${this._netWPM()} WPM (std dev: ${this._consistency()})`
+    this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._relativeStdDev()}%)`
   }
 
-  _numMins() {
-    return (new Date().getTime() - this._startTime) / (1000 * 60)
+  _calcGrossWPM(numMins) {
+    return (this._numEntries / 5) / this._numMins
   }
 
-  _grossWPM(numMins) {
-    numMins = numMins || this._numMins()
-    return (this._numEntries / 5) / numMins
+  _calcNetWPM() {
+    return Math.max(0, this._calcGrossWPM() - this._numErrors / this._numMins)
   }
 
-  _netWPM() {
-    const numMins = this._numMins()
-    const wpm = Math.max(0, this._grossWPM(numMins) - this._numErrors / numMins)
+  _updateStats() {
+    this._numMins = (new Date().getTime() - this._startTime) / (1000 * 60)
     this._numSnapshots += 1
-    this._runningSum += wpm
+    this._netWPM = this._calcNetWPM()
+    this._runningSum += this._netWPM
     this._runningAverage = this._runningSum / this._numSnapshots
-    this._runningStdDevSum += Math.pow(wpm - this._runningAverage, 2)
-    return Math.round(wpm)
+    this._runningStdDevSum += Math.pow(this._netWPM - this._runningAverage, 2)
   }
 
-  _consistency(numMins) {
-    return this._numSnapshots > 0 ? Math.round(Math.sqrt(this._runningStdDevSum / this._numSnapshots)) : 0
+  _relativeStdDev() {
+    const stdDev = Math.sqrt(this._runningStdDevSum / this._numSnapshots)
+    const relativeStdDev = stdDev / this._runningAverage
+    return this._numSnapshots > 0 ? Math.round((1 - relativeStdDev) * 100) : 0
   }
 }
 
