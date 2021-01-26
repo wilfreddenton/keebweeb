@@ -168,12 +168,13 @@ class TextBox {
 }
 
 class WPM {
-  constructor(element) {
+  constructor(element, intervalMS) {
     this._element = element
-    this._innerElement = document.createElement('span')
+    this._intervalMS = intervalMS || 1000
     this._numEntries = 0
+    this._numEntriesSnapshot = 0
     this._numErrors = 0
-    this._grossWPM = 0
+    this._rawWPM = 0
     this._netWPM = 0
     this._numMins = 0
     this._m = 0
@@ -193,7 +194,8 @@ class WPM {
         this._interval = setInterval(() => {
           this._updateStats()
           this._render()
-        }, 1000)
+          this._numEntriesSnapshot = 0
+        }, this._intervalMS)
       }
       l()
     }
@@ -202,6 +204,7 @@ class WPM {
   _setupListeners() {
     listen(EventIncEntries, this._baseListener(() => {
       this._numEntries += 1
+      this._numEntriesSnapshot += 1
     }))
     listen(EventIncErrors, this._baseListener(() => {
       this._numErrors += 1
@@ -218,28 +221,30 @@ class WPM {
     this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._consistency()}%)`
   }
 
-  _calcGrossWPM(numMins) {
-    return (this._numEntries / 5) / this._numMins
+  _calcRawWPM() {
+    return (this._numEntriesSnapshot / 5) / (this._intervalMS / (1000 * 60))
   }
 
   _calcNetWPM() {
-    return Math.max(0, this._calcGrossWPM() - this._numErrors / this._numMins)
+    const grossWPM = (this._numEntries / 5) / this._numMins
+    return Math.max(0, grossWPM - this._numErrors / this._numMins)
   }
 
   _updateStats() {
     this._numMins = (new Date().getTime() - this._startTime) / (1000 * 60)
-    this._grossWPM = this._calcGrossWPM()
+    this._rawWPM = this._calcRawWPM()
     this._netWPM = this._calcNetWPM()
     this._k += 1
     const prevM = this._m
-    this._m += (this._grossWPM - prevM) / this._k
-    this._s += (this._grossWPM - this._m) * (this._grossWPM - prevM)
+    this._m += (this._rawWPM - prevM) / this._k
+    this._s += (this._rawWPM - this._m) * (this._rawWPM - prevM)
   }
 
   _consistency() {
+    if (this._s < 1) return 100
     const stdDev = Math.sqrt(this._s / (this._k - 1))
     const relativeStdDev = stdDev / this._m
-    return this._s > 0 ? Math.round((1 - relativeStdDev) * 100) : 0
+    return Math.max(0, Math.round((1 - relativeStdDev) * 100))
   }
 }
 
