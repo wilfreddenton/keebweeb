@@ -1,7 +1,5 @@
-const EventIncEntries = 'kw-inc-entries',
-      EventIncErrors = 'kw-inc-errors',
-      EventSubErrors = 'kw-sub-errors',
-      EventStop = 'kw-stop'
+const EventEntry = 'keebweeb-entry'
+const EventStop = 'keebweeb-stop'
 
 function emit(eventName, data) {
   document.dispatchEvent(
@@ -55,13 +53,13 @@ class CC { // stands for Controlled Character
     const isValid = this._char === c
     this._element.classList.add(isValid ? 'correct' : 'incorrect')
     this._element.innerHTML = c
-    emit(EventIncEntries)
+    let errorDelta = 0
     if (!isValid) {
-      this._numErrors += 1
-      emit(EventIncErrors)
+      errorDelta = 1
     } else if (this._isValid === false) {
-      emit(EventSubErrors, {n: this._numErrors})
+      errorDelta = -this._numErrors
     }
+    emit(EventEntry, {errorDelta})
     this._isValid = isValid
   }
 
@@ -166,6 +164,8 @@ class WPM {
     this._element = element
     this._intervalMS = intervalMS || 1000
     this._numEntries = 0
+    this._timeLast = 0
+    this._timeAverage = 0
     this._numEntriesSnapshot = 0
     this._numErrors = 0
     this._rawWPM = 0
@@ -181,33 +181,14 @@ class WPM {
     this._render()
   }
 
-  _baseListener(l) {
-    return () => {
-      if (this._startTime === null) {
-        this._startTime = new Date().getTime()
-        this._interval = setInterval(() => {
-          this._updateStats()
-          this._render()
-          this._numEntriesSnapshot = 0
-        }, this._intervalMS)
-      }
-      l()
-    }
-  }
-
   _setupListeners() {
-    listen(EventIncEntries, this._baseListener(() => {
+    listen(EventEntry, ({errorDelta}) => {
+      if (this._startTime === null) this._startTime = new Date().getTime()
       this._numEntries += 1
-      this._numEntriesSnapshot += 1
-    }))
-    listen(EventIncErrors, this._baseListener(() => {
-      this._numErrors += 1
-    }))
-    listen(EventSubErrors, ({n}) => {
-      this._numErrors -= n
-    })
-    listen(EventStop, () => {
-      clearInterval(this._interval)
+      this._numErrors += errorDelta
+
+      this._updateStats()
+      this._render()
     })
   }
 
@@ -225,19 +206,27 @@ class WPM {
   }
 
   _updateStats() {
+    const _timeLast = this._timeLast
+    const time = new Date().getTime()
+    this._timeLast = time
+    if (_timeLast === 0) return
+
+    const timeBetween = time - _timeLast
+    this._timeAverage = (this._timeAverage + timeBetween)
+    this._rawWPM = (60 * 1000) / timeBetween / 5
     this._numMins = (new Date().getTime() - this._startTime) / (1000 * 60)
-    this._rawWPM = this._calcRawWPM()
     this._netWPM = this._calcNetWPM()
-    this._k += 1
-    const prevM = this._m
-    this._m += Math.round((this._rawWPM - prevM) / this._k)
-    this._s += Math.round((this._rawWPM - this._m) * (this._rawWPM - prevM))
+
+    const oldM = this._m
+    this._m += (this._rawWPM - this._m) / this._numEntries
+    this._s += (this._rawWPM - this._m) * (this._rawWPM - oldM)
   }
 
   _consistency() {
-    if (this._s < 1) return 100
-    const stdDev = Math.round(Math.sqrt(this._s / (this._k - 1)))
+    if (this._numEntries <= 1) return 0
+    const stdDev = Math.sqrt(this._s / (this._numEntries - 1))
     const relativeStdDev = stdDev / this._m
+    // console.log(stdDev, mean)
     return Math.max(0, Math.round((1 - relativeStdDev) * 100))
   }
 }
@@ -253,26 +242,11 @@ class Accuracy {
     this._render()
   }
 
-  _baseListener(l) {
-    return () => {
-      if (this._interval === null) {
-        this._interval = setInterval(() => {
-          this._render()
-        }, 100)
-      }
-      l()
-    }
-  }
-
   _setupListeners() {
-    listen(EventIncEntries, this._baseListener(() => {
+    listen(EventEntry, ({errorDelta}) => {
       this._numEntries += 1
-    }))
-    listen(EventIncErrors, this._baseListener(() => {
-      this._numErrors += 1
-    }))
-    listen(EventStop, () => {
-      clearInterval(this._interval)
+      this._numErrors += errorDelta
+      this._render()
     })
   }
 
