@@ -185,10 +185,14 @@ class WPM {
 
   _setupListeners() {
     listen(EventEntry, ({errorDelta}) => {
-      if (this._startTime === null) this._startTime = new Date().getTime()
+      if (this._startTime === null) {
+        this._startTime = new Date().getTime()
+        this._timeLast = this._startTime
+        this._numErrors += errorDelta
+        return
+      }
       this._numEntries += 1
       this._numEntriesSnapshot += 1
-      this._numErrors += errorDelta
 
       this._updateStats()
       this._render()
@@ -212,12 +216,12 @@ class WPM {
     let _timeLast = this._timeLast
     const time = new Date().getTime()
     this._timeLast = time
-    if (_timeLast === 0) return
 
     const timeBetween = time - _timeLast
     this._timeBetweenSum += timeBetween
     if (this._numEntriesSnapshot === 5) {
-      this._rawWPM = Math.round((60 * 1000) / this._timeBetweenSum)
+      const rawWPM = Math.round((60 * 1000) / this._timeBetweenSum)
+      this._rawWPM = Math.abs(rawWPM - this._rawWPM) > 5 ? rawWPM : this._rawWPM
       this._timeBetweenSum = 0
 
       const oldM = this._m
