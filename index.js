@@ -59,8 +59,9 @@ class CC { // stands for Controlled Character
     } else if (this._isValid === false) {
       errorDelta = -this._numErrors
     }
-    emit(EventEntry, {errorDelta})
+    this._numErrors += errorDelta
     this._isValid = isValid
+    emit(EventEntry, {errorDelta})
   }
 
   insertBefore(element) {
@@ -214,7 +215,7 @@ class WPM {
     const timeBetween = time - _timeLast
     this._timeAverage = (this._timeAverage + timeBetween)
     this._rawWPM = (60 * 1000) / timeBetween / 5
-    this._numMins = (new Date().getTime() - this._startTime) / (1000 * 60)
+    this._numMins = (time - this._startTime) / (1000 * 60)
     this._netWPM = this._calcNetWPM()
 
     const oldM = this._m
@@ -226,7 +227,6 @@ class WPM {
     if (this._numEntries <= 1) return 0
     const stdDev = Math.sqrt(this._s / (this._numEntries - 1))
     const relativeStdDev = stdDev / this._m
-    // console.log(stdDev, mean)
     return Math.max(0, Math.round((1 - relativeStdDev) * 100))
   }
 }
@@ -245,7 +245,7 @@ class Accuracy {
   _setupListeners() {
     listen(EventEntry, ({errorDelta}) => {
       this._numEntries += 1
-      this._numErrors += errorDelta
+      this._numErrors += errorDelta > -1 ? errorDelta : 0
       this._render()
     })
   }
