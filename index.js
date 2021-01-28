@@ -4,22 +4,16 @@ const EventIncEntries = 'kw-inc-entries',
       EventStop = 'kw-stop'
 
 function emit(eventName, data) {
-  data = data || null
-  if (data === null) {
-    document.dispatchEvent(new Event(eventName))
-  } else {
-    document.dispatchEvent(new CustomEvent(eventName, {detail: data}))
-  }
+  document.dispatchEvent(
+    typeof data === 'undefined'
+      ? new Event(eventName)
+      : new CustomEvent(eventName, {detail: data}))
 }
 
 function listen(eventName, handler) {
-  document.addEventListener(eventName, (e) => {
-    if (e.detail === undefined) {
-      handler()
-    } else {
-      handler(e.detail)
-    }
-  })
+  document.addEventListener(
+    eventName,
+    e => typeof e.detail === 'undefined' ? handler(): handler(e.detail))
 }
 
 function CGroup() {
@@ -222,12 +216,12 @@ class WPM {
   }
 
   _calcRawWPM() {
-    return (this._numEntriesSnapshot / 5) / (this._intervalMS / (1000 * 60))
+    return Math.round((this._numEntriesSnapshot / 5) / (this._intervalMS / (1000 * 60)))
   }
 
   _calcNetWPM() {
-    const grossWPM = (this._numEntries / 5) / this._numMins
-    return Math.max(0, grossWPM - this._numErrors / this._numMins)
+    const grossWPM = Math.round((this._numEntries / 5) / this._numMins)
+    return Math.max(0, Math.round(grossWPM - this._numErrors / this._numMins))
   }
 
   _updateStats() {
@@ -236,13 +230,13 @@ class WPM {
     this._netWPM = this._calcNetWPM()
     this._k += 1
     const prevM = this._m
-    this._m += (this._rawWPM - prevM) / this._k
-    this._s += (this._rawWPM - this._m) * (this._rawWPM - prevM)
+    this._m += Math.round((this._rawWPM - prevM) / this._k)
+    this._s += Math.round((this._rawWPM - this._m) * (this._rawWPM - prevM))
   }
 
   _consistency() {
     if (this._s < 1) return 100
-    const stdDev = Math.sqrt(this._s / (this._k - 1))
+    const stdDev = Math.round(Math.sqrt(this._s / (this._k - 1)))
     const relativeStdDev = stdDev / this._m
     return Math.max(0, Math.round((1 - relativeStdDev) * 100))
   }
