@@ -165,9 +165,9 @@ class WPM {
     this._element = element
     this._intervalMS = intervalMS || 1000
     this._numEntries = 0
-    this._timeLast = 0
-    this._timeAverage = 0
     this._numEntriesSnapshot = 0
+    this._timeLast = 0
+    this._timeBetweenSum = 0
     this._numErrors = 0
     this._rawWPM = 0
     this._netWPM = 0
@@ -175,6 +175,7 @@ class WPM {
     this._m = 0
     this._s = 0
     this._k = 0
+    this._consistency = 100
     this._startTime = null
     this._interval = null
 
@@ -186,19 +187,20 @@ class WPM {
     listen(EventEntry, ({errorDelta}) => {
       if (this._startTime === null) this._startTime = new Date().getTime()
       this._numEntries += 1
+      this._numEntriesSnapshot += 1
       this._numErrors += errorDelta
 
       this._updateStats()
       this._render()
+
+      if (this._numEntriesSnapshot === 5) {
+        this._numEntriesSnapshot = 0
+      }
     })
   }
 
   _render() {
-    this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._consistency()}%)`
-  }
-
-  _calcRawWPM() {
-    return Math.round((this._numEntriesSnapshot / 5) / (this._intervalMS / (1000 * 60)))
+    this._element.innerHTML = `${Math.round(this._netWPM)} WPM (consistency: ${this._consistency}%)`
   }
 
   _calcNetWPM() {
@@ -207,28 +209,29 @@ class WPM {
   }
 
   _updateStats() {
-    const _timeLast = this._timeLast
+    let _timeLast = this._timeLast
     const time = new Date().getTime()
     this._timeLast = time
     if (_timeLast === 0) return
 
     const timeBetween = time - _timeLast
-    this._timeAverage = (this._timeAverage + timeBetween)
-    this._rawWPM = (60 * 1000) / timeBetween / 5
+    this._timeBetweenSum += timeBetween
+    if (this._numEntriesSnapshot === 5) {
+      this._rawWPM = Math.round((60 * 1000) / this._timeBetweenSum)
+      this._timeBetweenSum = 0
+
+      const oldM = this._m
+      const numWords = this._numEntries / 5
+      this._m += (this._rawWPM - this._m) / numWords
+      this._s += (this._rawWPM - this._m) * (this._rawWPM - oldM)
+      const stdDev = Math.sqrt(this._s / numWords)
+      const relativeStdDev = stdDev / this._m
+      this._consistency = Math.max(0, Math.round((1 - relativeStdDev) * 100))
+    }
     this._numMins = (time - this._startTime) / (1000 * 60)
     this._netWPM = this._calcNetWPM()
-
-    const oldM = this._m
-    this._m += (this._rawWPM - this._m) / this._numEntries
-    this._s += (this._rawWPM - this._m) * (this._rawWPM - oldM)
   }
 
-  _consistency() {
-    if (this._numEntries <= 1) return 0
-    const stdDev = Math.sqrt(this._s / (this._numEntries - 1))
-    const relativeStdDev = stdDev / this._m
-    return Math.max(0, Math.round((1 - relativeStdDev) * 100))
-  }
 }
 
 class Accuracy {
