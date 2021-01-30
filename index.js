@@ -120,7 +120,7 @@ class TextBox {
     })
     document.addEventListener('keydown', e => {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
-      this.input(e.key)
+      this.input(e)
     })
     listen(EventStop, () => {
       this._complete = true
@@ -140,9 +140,13 @@ class TextBox {
     this._cursor.classList.add('hide')
   }
 
-  input(key) {
+  input(e) {
     if (!this._element.classList.contains('focused')) return
     if (this._complete) return
+    const key = e.key
+    if (key !== "Backspace" && !/^.$/.test(key)) return
+    e.preventDefault()
+    e.stopPropagation()
 
     if (key === "Backspace") {
       if (this._index < 1) return
@@ -151,7 +155,6 @@ class TextBox {
       cc.revert()
       this._index -= 1
     } else {
-      if (!/^.$/.test(key)) return
       let cc = null
       if (this._index < this._ccs.length) {
         cc = this._ccs[this._index]
