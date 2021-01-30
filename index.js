@@ -87,6 +87,7 @@ class TextBox {
     this._cursorInterval = null
     this._ccs = []
     this._index = 0
+    this._complete = false
 
     this._render()
     this._setupListeners()
@@ -121,9 +122,8 @@ class TextBox {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
       this.input(e.key)
     })
-
     listen(EventStop, () => {
-      console.log('stop')
+      this._complete = true
     })
   }
 
@@ -142,6 +142,7 @@ class TextBox {
 
   input(key) {
     if (!this._element.classList.contains('focused')) return
+    if (this._complete) return
 
     if (key === "Backspace") {
       if (this._index < 1) return
