@@ -40,6 +40,10 @@ class CC { // stands for Controlled Character
     return c
   }
 
+  isValid() {
+    return this._isValid
+  }
+
   revert() {
     this._element.classList.remove('space')
     this._element.classList.remove('correct')
@@ -62,6 +66,7 @@ class CC { // stands for Controlled Character
     this._numErrors += errorDelta
     this._isValid = isValid
     emit(EventEntry, {errorDelta})
+    return this._isValid
   }
 
   insertBefore(element) {
@@ -116,6 +121,10 @@ class TextBox {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
       this.input(e.key)
     })
+
+    listen(EventStop, () => {
+      console.log('stop')
+    })
   }
 
   focus() {
@@ -133,7 +142,6 @@ class TextBox {
 
   input(key) {
     if (!this._element.classList.contains('focused')) return
-    if (this._index >= this._text.length) return
 
     if (key === "Backspace") {
       if (this._index < 1) return
@@ -143,15 +151,19 @@ class TextBox {
       this._index -= 1
     } else {
       if (!/^.$/.test(key)) return
-      const cc = this._ccs[this._index]
-      cc.validate(key)
-      this._index += 1
-      if (this._index < this._text.length) {
-        this._ccs[this._index].insertBefore(this._cursor)
-      } else {
+      let cc = null
+      if (this._index < this._ccs.length) {
+        console.log('if')
+        cc = this._ccs[this._index]
         cc.insertAfter(this._cursor)
-        emit(EventStop)
+      } else {
+        console.log('else')
+        cc = new CC('\n', this._ccs[this._ccs.length - 1]._group)
+        this._ccs.push(cc)
+        cc.insertAfter(this._cursor)
       }
+      if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
+      this._index += 1
     }
 
     clearInterval(this._cursorInterval)
