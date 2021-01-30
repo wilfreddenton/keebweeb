@@ -153,11 +153,9 @@ class TextBox {
       if (!/^.$/.test(key)) return
       let cc = null
       if (this._index < this._ccs.length) {
-        console.log('if')
         cc = this._ccs[this._index]
         cc.insertAfter(this._cursor)
       } else {
-        console.log('else')
         cc = new CC('\n', this._ccs[this._ccs.length - 1]._group)
         this._ccs.push(cc)
         cc.insertAfter(this._cursor)
