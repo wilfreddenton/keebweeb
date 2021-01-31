@@ -114,7 +114,6 @@ class TextBox {
       if (c === " ") cGroup = null
     })
     this._element.appendChild(frag)
-    console.log(this._index, this._ccs[this._index]._char)
     this._ccs[this._index].insertBefore(this._cursor)
   }
 
@@ -126,10 +125,19 @@ class TextBox {
     })
     document.addEventListener('keydown', e => {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
+      switch(e.key) {
+      case 'Escape':
+        this.unFocus()
+        return
+      case 'Enter':
+        this.focus()
+        return
+      }
       this.input(e)
     })
     listen(EventStop, () => {
       this._complete = true
+      this.unFocus()
     })
     listen(EventReset, ({text}) => {
       this._reset(text)
@@ -151,7 +159,7 @@ class TextBox {
   }
 
   focus() {
-    this._element.classList.add('focused')
+    if (!this._element.classList.contains('focused')) this._element.classList.add('focused')
     this._cursor.classList.remove('hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
@@ -172,6 +180,7 @@ class TextBox {
     e.stopPropagation()
 
     const cursorTopBefore = this._cursor.offsetTop
+    this.focus()
 
     if (key === "Backspace") {
       if (this._index < 1) return
@@ -207,10 +216,6 @@ class TextBox {
       }
     }
     emit(EventProgress, {index: this._index, length: this._text.length})
-
-    clearInterval(this._cursorInterval)
-    this._cursor.classList.remove('hide')
-    this._cursorInterval = setInterval(...this._cursorIntervalParams)
 
     const cursorTopAfter = this._cursor.offsetTop
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
@@ -320,10 +325,9 @@ class Accuracy {
 class Progress {
   constructor(element) {
     this._element = element
-    this._progress = 0
 
+    this._reset()
     this._setupListeners()
-    this._render()
   }
 
   _setupListeners() {
@@ -331,6 +335,14 @@ class Progress {
       this._progress = Math.floor((index / length) * 100)
       this._render()
     })
+    listen(EventReset, () => {
+      this._reset()
+    })
+  }
+
+  _reset() {
+    this._progress = 0
+    this._render()
   }
 
   _render() {
