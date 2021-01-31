@@ -148,15 +148,31 @@ class TextBox {
     let cc = null
     if (key === "Backspace") {
       if (this._index < 1) return
-      cc = this._ccs[this._index-1]
-      cc.insertBefore(cursor)
-      cc.revert()
       this._index -= 1
+      cc = this._ccs[this._index]
+      if (this._index < this._text.length) {
+        cc.insertBefore(this._cursor)
+        cc.revert()
+      } else {
+        const prevCC = this._ccs[this._index - 1]
+        cc._element.remove()
+        if (cc._group.childElementCount === 1) cc._group.remove()
+        this._ccs.splice(this._index, 1)
+        prevCC.insertAfter(this._cursor)
+      }
     } else {
-      if (this._index < this._ccs.length) {
+      if (this._index < this._text.length) {
         cc = this._ccs[this._index]
       } else {
-        cc = new CC('\n', this._ccs[this._ccs.length - 1]._group)
+        const prevCC = this._ccs[this._ccs.length - 1]
+        let group = null
+        if (prevCC._element.innerHTML === ' ') {
+          group = CGroup()
+          this._element.appendChild(group)
+        } else {
+          group = prevCC._group
+        }
+        cc = new CC('\n', group)
         this._ccs.push(cc)
       }
       if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
@@ -171,12 +187,13 @@ class TextBox {
     const cursorTopAfter = this._cursor.offsetTop
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
     if (cursorTopDiff === 0) return
-    const lineHeight = cc._group.offsetHeight
+    const lineHeight = this._ccs[this._text.length - 1]._group.offsetHeight
     const marginTop = this._element.style.marginTop === "" ? 0 : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
     let newMarginTop = marginTop
     if (cursorTopDiff > 0 && cursorTopAfter > lineHeight && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
       this._element.style.marginTop = `${newMarginTop -= 3}rem`
     }
+    console.log(cursorTopDiff, cursorTopBefore, console.log(lineHeight), this._element.offsetTop)
     if (cursorTopDiff < 0 && cursorTopBefore === lineHeight && this._element.offsetTop !== 0) {
       this._element.style.marginTop = `${newMarginTop += 3}rem`
     }
