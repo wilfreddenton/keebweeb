@@ -73,8 +73,9 @@ class CC { // stands for Controlled Character
 
 class TextBox {
   constructor(element, text) {
+    this._parent = element
     this._element = document.createElement('div')
-    element.appendChild(this._element)
+    this._parent.appendChild(this._element)
     this._text = text.trim()
     this._cursor = document.createElement('span')
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
@@ -142,14 +143,16 @@ class TextBox {
     e.preventDefault()
     e.stopPropagation()
 
+    const cursorTopBefore = this._cursor.offsetTop
+
+    let cc = null
     if (key === "Backspace") {
       if (this._index < 1) return
-      const cc = this._ccs[this._index-1]
+      cc = this._ccs[this._index-1]
       cc.insertBefore(cursor)
       cc.revert()
       this._index -= 1
     } else {
-      let cc = null
       if (this._index < this._ccs.length) {
         cc = this._ccs[this._index]
       } else {
@@ -158,22 +161,25 @@ class TextBox {
       }
       if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
       this._index += 1
-
-      const cursorTop = this._cursor.offsetTop
       cc.insertAfter(this._cursor)
-      const cursorTopDiff = this._cursor.offsetTop - cursorTop
-      const marginTop = this._element.style.marginTop === "" ? 0 : parseInt(this._element.style.marginTop.match(/\d+/)[0])
-      let newMarginTop = marginTop
-      if (cursorTopDiff > 0) {
-        this._element.style.marginTop = `${newMarginTop -= 3}rem`
-      } else if (cursorTopDiff < 0) {
-        this._element.style.marginTop = `${newMarginTop += 3}rem`
-      }
     }
 
     clearInterval(this._cursorInterval)
     this._cursor.classList.remove('hide')
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
+
+    const cursorTopAfter = this._cursor.offsetTop
+    const cursorTopDiff = cursorTopAfter - cursorTopBefore
+    if (cursorTopDiff === 0) return
+    const lineHeight = cc._group.offsetHeight
+    const marginTop = this._element.style.marginTop === "" ? 0 : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
+    let newMarginTop = marginTop
+    if (cursorTopDiff > 0 && cursorTopAfter > lineHeight && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
+      this._element.style.marginTop = `${newMarginTop -= 3}rem`
+    }
+    if (cursorTopDiff < 0 && cursorTopBefore === lineHeight && this._element.offsetTop !== 0) {
+      this._element.style.marginTop = `${newMarginTop += 3}rem`
+    }
   }
 }
 
@@ -298,7 +304,7 @@ class Select {
 
 function main() {
   const texts = [
-    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit. Nunc venenatis, sapien vitae aliquet cursus, nunc lectus elementum urna, eget vestibulum nisi risus sed augue. Nunc non arcu at lectus convallis ullamcorper eget eget ex. Morbi vehicula in leo ac tempus. Morbi congue tortor et sapien elementum, vitae pellentesque leo consequat.`
+    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit.`
     // `The sky above the port was the color of television, tuned to a dead channel.`,
     // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
     // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
