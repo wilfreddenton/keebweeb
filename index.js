@@ -1,5 +1,6 @@
-const EventEntry = 'keebweeb-entry'
-const EventStop = 'keebweeb-stop'
+const EventEntry = 'keebweeb-entry',
+      EventProgress = 'keepweeb-progress',
+      EventStop = 'keebweeb-stop'
 
 function emit(eventName, data) {
   document.dispatchEvent(
@@ -194,6 +195,7 @@ class TextBox {
         cc.insertAfter(this._cursor)
       }
     }
+    emit(EventProgress, {index: this._index, length: this._text.length})
 
     clearInterval(this._cursorInterval)
     this._cursor.classList.remove('hide')
@@ -285,12 +287,33 @@ class Accuracy {
   }
 
   _render() {
-    this._element.innerHTML = `${Math.floor(this.accuracy() * 100)}%`
+    this._element.innerHTML = `Accuracy: ${Math.floor(this.accuracy() * 100)}%`
   }
 
   accuracy() {
     if (this._numEntries === 0) return 1
     return (this._numEntries - this._numErrors) / this._numEntries
+  }
+}
+
+class Progress {
+  constructor(element) {
+    this._element = element
+    this._progress = 0
+
+    this._setupListeners()
+    this._render()
+  }
+
+  _setupListeners() {
+    listen(EventProgress, ({index, length}) => {
+      this._progress = Math.floor(((index + 1) / length) * 100)
+      this._render()
+    })
+  }
+
+  _render() {
+    this._element.innerHTML = `Progress: ${this._progress}%`
   }
 }
 
@@ -353,6 +376,7 @@ function main() {
   new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha'], 'theme')
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
+  new Progress(document.getElementById('progress'))
   new TextBox(document.getElementById('text-box'), texts[Math.floor(Math.random() * texts.length)])
 }
 
