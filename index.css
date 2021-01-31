@@ -152,7 +152,6 @@ body.theme--mecha {
   background: none;
   width: 100%;
   font-family: 'recursive', monospace;
-  /* font-variation-settings: 'slnt' -15, 'MONO' 0; */
   font-variation-settings: 'MONO' 1;
   font-size: 1.5rem;
   user-select: none;

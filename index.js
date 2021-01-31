@@ -14,9 +14,10 @@ function listen(eventName, handler) {
     e => typeof e.detail === 'undefined' ? handler(): handler(e.detail))
 }
 
-function CGroup() {
+function CGroup(parent) {
   const cGroup = document.createElement('span')
   cGroup.classList.add('c-group')
+  parent.appendChild(cGroup)
   return cGroup
 }
 
@@ -62,6 +63,23 @@ class CC { // stands for Controlled Character
     return this._isValid
   }
 
+  group() {
+    return this._group
+  }
+
+  removeFromDOM() {
+    this._element.remove()
+    if (this._group.querySelectorAll('.cc').length === 0) this._group.remove()
+  }
+
+  currentChar() {
+    return this._element.innerHTML
+  }
+
+  lineHeight() {
+    return this._group.offsetHeight
+  }
+
   insertBefore(element) {
     this._group.insertBefore(element, this._element)
   }
@@ -97,9 +115,8 @@ class TextBox {
     const frag = document.createDocumentFragment();
     let cGroup = null
     this._text.split("").forEach(c => {
-      if (cGroup === null) cGroup = CGroup()
+      if (cGroup === null) cGroup = CGroup(frag)
       const cc = new CC(c, cGroup)
-      frag.appendChild(cGroup)
       this._ccs.push(cc)
       if (c === " ") cGroup = null
     })
@@ -145,37 +162,31 @@ class TextBox {
 
     const cursorTopBefore = this._cursor.offsetTop
 
-    let cc = null
     if (key === "Backspace") {
       if (this._index < 1) return
       this._index -= 1
-      cc = this._ccs[this._index]
+      const cc = this._ccs[this._index]
       if (this._index < this._text.length) {
         cc.insertBefore(this._cursor)
         cc.revert()
       } else {
-        const prevCC = this._ccs[this._index - 1]
-        cc._element.remove()
-        if (cc._group.childElementCount === 1) cc._group.remove()
+        this._ccs[this._index - 1].insertAfter(this._cursor)
+        cc.removeFromDOM()
         this._ccs.splice(this._index, 1)
-        prevCC.insertAfter(this._cursor)
       }
     } else {
+      let cc = null
       if (this._index < this._text.length) {
         cc = this._ccs[this._index]
       } else {
-        const prevCC = this._ccs[this._ccs.length - 1]
-        let group = null
-        if (prevCC._element.innerHTML === ' ') {
-          group = CGroup()
-          this._element.appendChild(group)
-        } else {
-          group = prevCC._group
-        }
+        const prevCC = this._ccs[this._index - 1]
+        const group = prevCC.currentChar() === ' ' ? CGroup(this._element) : prevCC.group()
         cc = new CC('\n', group)
         this._ccs.push(cc)
       }
+
       if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
+
       this._index += 1
       if (this._index < this._text.length) {
         this._ccs[this._index].insertBefore(this._cursor)
@@ -191,14 +202,19 @@ class TextBox {
     const cursorTopAfter = this._cursor.offsetTop
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
     if (cursorTopDiff === 0) return
-    const lineHeight = this._ccs[this._text.length - 1]._group.offsetHeight
-    const marginTop = this._element.style.marginTop === "" ? 0 : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
-    let newMarginTop = marginTop
-    if (cursorTopDiff > 0 && cursorTopAfter > lineHeight && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
-      this._element.style.marginTop = `${newMarginTop -= 3}rem`
+    const lineHeight = this._ccs[this._text.length - 1].lineHeight()
+    const marginTop = this._element.style.marginTop === ""
+          ? 0
+          : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
+    if (cursorTopDiff > 0
+        && cursorTopAfter > lineHeight
+        && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
+      this._element.style.marginTop = `${marginTop - 3}rem`
     }
-    if (cursorTopDiff < 0 && cursorTopBefore === lineHeight && this._element.offsetTop !== 0) {
-      this._element.style.marginTop = `${newMarginTop += 3}rem`
+    if (cursorTopDiff < 0
+        && cursorTopBefore === lineHeight
+        && this._element.offsetTop !== 0) {
+      this._element.style.marginTop = `${marginTop + 3}rem`
     }
   }
 }
