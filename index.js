@@ -193,7 +193,6 @@ class TextBox {
     if (cursorTopDiff > 0 && cursorTopAfter > lineHeight && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
       this._element.style.marginTop = `${newMarginTop -= 3}rem`
     }
-    console.log(cursorTopDiff, cursorTopBefore, console.log(lineHeight), this._element.offsetTop)
     if (cursorTopDiff < 0 && cursorTopBefore === lineHeight && this._element.offsetTop !== 0) {
       this._element.style.marginTop = `${newMarginTop += 3}rem`
     }
@@ -266,7 +265,7 @@ class Accuracy {
   }
 
   _render() {
-    this._element.innerHTML = `${Math.round(this.accuracy() * 100)}%`
+    this._element.innerHTML = `${Math.floor(this.accuracy() * 100)}%`
   }
 
   accuracy() {
@@ -321,7 +320,9 @@ class Select {
 
 function main() {
   const texts = [
-    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit.`
+    // `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit.`,
+    // `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides. What other creature in God's wide domain would carry the memory of you, Fanny, dust these nine hundred years, and allow it to eat away at him even as consumption does the same work with its effortless efficiency?`,
+    `She had always felt that the essence of human experience lay not primarily in the peak experiences, the wedding days and triumphs which stood out in the memory like dates circled in red on old calendars, but, rather, in the unself-conscious flow of little things.`,
     // `The sky above the port was the color of television, tuned to a dead channel.`,
     // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
     // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
