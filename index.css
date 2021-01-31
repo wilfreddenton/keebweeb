@@ -162,7 +162,7 @@ body.theme--mecha {
 
 #text-box > div {
   margin-top: 0rem;
-  transition: margin-top 100ms;
+  transition: margin-top 300ms;
 }
 
 .stat {
