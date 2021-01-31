@@ -158,6 +158,7 @@ body.theme--mecha {
   user-select: none;
   height: 9rem;
   overflow: hidden;
+  white-space: normal;
 }
 
 #text-box > div {

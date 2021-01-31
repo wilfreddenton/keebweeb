@@ -177,7 +177,11 @@ class TextBox {
       }
       if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
       this._index += 1
-      cc.insertAfter(this._cursor)
+      if (this._index < this._text.length) {
+        this._ccs[this._index].insertBefore(this._cursor)
+      } else {
+        cc.insertAfter(this._cursor)
+      }
     }
 
     clearInterval(this._cursorInterval)
