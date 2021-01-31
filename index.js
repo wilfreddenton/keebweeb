@@ -23,7 +23,6 @@ function CGroup() {
 class CC { // stands for Controlled Character
   constructor(c, group) {
     const span = document.createElement('span')
-    c = this._transform(c)
     span.innerHTML = c
     span.classList.add('cc')
     group.appendChild(span)
@@ -33,11 +32,6 @@ class CC { // stands for Controlled Character
     this._element = span
     this._isValid = null
     this._numErrors = 0
-  }
-
-  _transform(c) {
-    if (c === " ") return "&nbsp;"
-    return c
   }
 
   isValid() {
@@ -52,8 +46,7 @@ class CC { // stands for Controlled Character
   }
 
   validate(c) {
-    c = this._transform(c)
-    if (c === "&nbsp;") this._element.classList.add('space')
+    if (c === " ") this._element.classList.add('space')
     const isValid = this._char === c
     this._element.classList.add(isValid ? 'correct' : 'incorrect')
     this._element.innerHTML = c
@@ -80,7 +73,8 @@ class CC { // stands for Controlled Character
 
 class TextBox {
   constructor(element, text) {
-    this._element = element
+    this._element = document.createElement('div')
+    element.appendChild(this._element)
     this._text = text.trim()
     this._cursor = document.createElement('span')
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
@@ -158,14 +152,23 @@ class TextBox {
       let cc = null
       if (this._index < this._ccs.length) {
         cc = this._ccs[this._index]
-        cc.insertAfter(this._cursor)
       } else {
         cc = new CC('\n', this._ccs[this._ccs.length - 1]._group)
         this._ccs.push(cc)
-        cc.insertAfter(this._cursor)
       }
       if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
       this._index += 1
+
+      const cursorTop = this._cursor.offsetTop
+      cc.insertAfter(this._cursor)
+      const cursorTopDiff = this._cursor.offsetTop - cursorTop
+      const marginTop = this._element.style.marginTop === "" ? 0 : parseInt(this._element.style.marginTop.match(/\d+/)[0])
+      let newMarginTop = marginTop
+      if (cursorTopDiff > 0) {
+        this._element.style.marginTop = `${newMarginTop -= 3}rem`
+      } else if (cursorTopDiff < 0) {
+        this._element.style.marginTop = `${newMarginTop += 3}rem`
+      }
     }
 
     clearInterval(this._cursorInterval)
@@ -295,14 +298,15 @@ class Select {
 
 function main() {
   const texts = [
-    `The sky above the port was the color of television, tuned to a dead channel.`,
-    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
-    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
-    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
-    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
+    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit. Nunc venenatis, sapien vitae aliquet cursus, nunc lectus elementum urna, eget vestibulum nisi risus sed augue. Nunc non arcu at lectus convallis ullamcorper eget eget ex. Morbi vehicula in leo ac tempus. Morbi congue tortor et sapien elementum, vitae pellentesque leo consequat.`
+    // `The sky above the port was the color of television, tuned to a dead channel.`,
+    // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
+    // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
+    // `When you are wrestling for possession of a sword, the man with the handle always wins.`,
+    // `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
   ]
 
-  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace'], 'theme')
+  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha'], 'theme')
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
   new TextBox(document.getElementById('text-box'), texts[Math.floor(Math.random() * texts.length)])

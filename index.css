@@ -97,6 +97,36 @@ body.theme--awaken {
   border-color: #24E7E8;
 }
 
+body.theme--mecha {
+  background-color: #080808;
+}
+
+.theme--mecha #cursor > span {
+  background-color: #45CB30;
+}
+
+.theme--mecha #text-box {
+  color: #5E359A;
+}
+
+.theme--mecha .cc.correct, .theme--mecha .stat {
+  color: #45CB30;
+}
+
+.theme--mecha .cc.incorrect {
+  color: #FF2811;
+}
+
+.theme--mecha .cc.space.incorrect {
+  border-color: #FF2811;
+}
+
+.theme--mecha select {
+  background-color: #080808;
+  color: #EC7317;
+  border-color: #EC7317;
+}
+
 #cursor {
   display: inline;
   position: relative;
@@ -126,6 +156,13 @@ body.theme--awaken {
   font-variation-settings: 'MONO' 1;
   font-size: 1.5rem;
   user-select: none;
+  max-height: 9rem;
+  overflow: hidden;
+}
+
+#text-box > div {
+  margin-top: 0rem;
+  transition: margin-top 100ms;
 }
 
 .stat {
@@ -154,6 +191,7 @@ select {
 
 .cc {
   display: inline-block;
+  white-space: pre;
 }
 
 .cc.hide {
