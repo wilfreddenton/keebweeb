@@ -1,6 +1,7 @@
 const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
-      EventStop = 'keebweeb-stop'
+      EventStop = 'keebweeb-stop',
+      EventReset = 'keebweeb-reset'
 
 function emit(eventName, data) {
   document.dispatchEvent(
@@ -93,19 +94,10 @@ class CC { // stands for Controlled Character
 class TextBox {
   constructor(element, text) {
     this._parent = element
-    this._element = document.createElement('div')
-    this._parent.appendChild(this._element)
-    this._text = text.trim()
-    this._cursor = document.createElement('span')
-    this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
     this._cursorInterval = null
-    this._ccs = []
-    this._index = 0
-    this._complete = false
-
-    this._render()
+    this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
+    this._reset(text)
     this._setupListeners()
-    this.focus()
   }
 
   _render() {
@@ -122,6 +114,7 @@ class TextBox {
       if (c === " ") cGroup = null
     })
     this._element.appendChild(frag)
+    console.log(this._index, this._ccs[this._index]._char)
     this._ccs[this._index].insertBefore(this._cursor)
   }
 
@@ -138,6 +131,23 @@ class TextBox {
     listen(EventStop, () => {
       this._complete = true
     })
+    listen(EventReset, ({text}) => {
+      this._reset(text)
+    })
+  }
+
+  _reset(text) {
+    if (typeof this._element !== 'undefined') this._element.remove()
+    this._element = document.createElement('div')
+    this._parent.appendChild(this._element)
+    this._cursor = document.createElement('span')
+    this._text = text.trim()
+    this._ccs = []
+    this._index = 0
+    this._complete = false
+
+    this._render()
+    this.focus()
   }
 
   focus() {
@@ -186,13 +196,14 @@ class TextBox {
         this._ccs.push(cc)
       }
 
-      if (cc.validate(key) && this._index === this._text.length - 1) emit(EventStop)
+      const isValid = cc.validate(key)
 
       this._index += 1
       if (this._index < this._text.length) {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
+        if (isValid && this._index === this._text.length) emit(EventStop)
       }
     }
     emit(EventProgress, {index: this._index, length: this._text.length})
@@ -225,16 +236,9 @@ class WPM {
   constructor(element, intervalMS) {
     this._element = element
     this._intervalMS = intervalMS || 1000
-    this._numEntries = 0
-    this._timeLast = 0
-    this._numErrors = 0
-    this._rawWPM = 0
-    this._netWPM = 0
-    this._startTime = null
-    this._interval = null
 
+    this._reset()
     this._setupListeners()
-    this._render()
   }
 
   _setupListeners() {
@@ -246,6 +250,18 @@ class WPM {
       this._updateStats()
       this._render()
     })
+    listen(EventReset, this._reset.bind(this))
+  }
+
+  _reset() {
+    this._numEntries = 0
+    this._timeLast = 0
+    this._numErrors = 0
+    this._rawWPM = 0
+    this._netWPM = 0
+    this._startTime = null
+
+    this._render()
   }
 
   _render() {
@@ -270,12 +286,9 @@ class WPM {
 class Accuracy {
   constructor(element) {
     this._element = element
-    this._numEntries = 0
-    this._numErrors = 0
-    this._interval = null
 
+    this._reset()
     this._setupListeners()
-    this._render()
   }
 
   _setupListeners() {
@@ -284,6 +297,14 @@ class Accuracy {
       this._numErrors += errorDelta > -1 ? errorDelta : 0
       this._render()
     })
+    listen(EventReset, this._reset.bind(this))
+  }
+
+  _reset() {
+    this._numEntries = 0
+    this._numErrors = 0
+
+    this._render()
   }
 
   _render() {
@@ -307,7 +328,7 @@ class Progress {
 
   _setupListeners() {
     listen(EventProgress, ({index, length}) => {
-      this._progress = Math.floor(((index + 1) / length) * 100)
+      this._progress = Math.floor((index / length) * 100)
       this._render()
     })
   }
@@ -363,21 +384,27 @@ class Select {
 
 function main() {
   const texts = [
-    // `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vitae venenatis ante. Sed non arcu mauris. Fusce vulputate metus quam, id sollicitudin ipsum congue et. Aenean vel velit ligula. Integer bibendum consectetur faucibus. Mauris et pellentesque velit.`,
-    // `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides. What other creature in God's wide domain would carry the memory of you, Fanny, dust these nine hundred years, and allow it to eat away at him even as consumption does the same work with its effortless efficiency?`,
+    `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
     `She had always felt that the essence of human experience lay not primarily in the peak experiences, the wedding days and triumphs which stood out in the memory like dates circled in red on old calendars, but, rather, in the unself-conscious flow of little things.`,
-    // `The sky above the port was the color of television, tuned to a dead channel.`,
-    // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
-    // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
-    // `When you are wrestling for possession of a sword, the man with the handle always wins.`,
-    // `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
+    `The sky above the port was the color of television, tuned to a dead channel.`,
+    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
+    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
+    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
+    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
   ]
+
+  const randomText = () => texts[Math.floor(Math.random() * texts.length)]
 
   new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha'], 'theme')
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
-  new TextBox(document.getElementById('text-box'), texts[Math.floor(Math.random() * texts.length)])
+  const textBox = new TextBox(document.getElementById('text-box'), randomText())
+  listen(EventStop, () => {
+    setTimeout(() => {
+      emit(EventReset, {text: randomText()})
+    }, 2000)
+  })
 }
 
 document.addEventListener('DOMContentLoaded', main)
