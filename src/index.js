@@ -128,6 +128,9 @@ class TextBox {
     document.addEventListener('keydown', e => {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
       switch(e.key) {
+      case 'Tab':
+        e.preventDefault()
+        return
       case 'Escape':
         this.unFocus()
         return
