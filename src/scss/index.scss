@@ -1,3 +1,41 @@
+@use 'theme';
+
+@include theme.new(
+  $name: '80082-blu',
+  $background-color: #2C2F38,
+  $text-color: #6E7886,
+  $cursor-color: #67C4E3,
+  $error-color: #CE4F68,
+  $accent-color: #67C4E3,
+);
+
+@include theme.new(
+  $name: 'awaken',
+  $background-color: #25252F,
+  $text-color: #E5C441,
+  $cursor-color: #24E7E8,
+  $error-color: #EA315C,
+  $accent-color: #24E7E8,
+);
+
+@include theme.new(
+  $name: 'cyberspace',
+  $background-color: #222822,
+  $text-color: #987AD4,
+  $cursor-color: #27D27F,
+  $error-color: #AD186B,
+  $accent-color: #27D27F,
+);
+
+@include theme.new(
+  $name: 'mecha',
+  $background-color: #080808,
+  $text-color: #5E359A,
+  $cursor-color: #45CB30,
+  $error-color: #FF2811,
+  $accent-color: #EC7317,
+);
+
 html {
   box-sizing: border-box;
 }
@@ -10,126 +48,6 @@ body {
   padding: 0;
   margin: 0;
   font-family: 'recursive', sans-serif;
-}
-
-body.theme--80082-blu {
-  background-color: #2C2F38;
-}
-
-.theme--80082-blu #cursor > span {
-  background-color: #67C4E3;
-}
-
-.theme--80082-blu #text-box, .theme--80082-blu .stat {
-  color: #6E7886;
-}
-
-.theme--80082-blu h1, .theme--80082-blu .cc.correct {
-  color: #67C4E3;
-}
-
-.theme--80082-blu .cc.incorrect {
-  color: #CE4F68;
-}
-
-.theme--80082-blu .cc.space.incorrect {
-  border-color: #CE4F68;
-}
-
-.theme--80082-blu select {
-  background-color: #2C2F38;
-  color: #67C4E3;
-  border-color: #67C4E3;
-}
-
-body.theme--cyberspace {
-  background-color: #222822;
-}
-
-.theme--cyberspace #cursor > span {
-  background-color: #27D27F;
-}
-
-.theme--cyberspace #text-box, .theme--cyberspace .stat {
-  color: #987AD4;
-}
-
-.theme--cyberspace h1, .theme--cyberspace .cc.correct {
-  color: #27D27F;
-}
-
-.theme--cyberspace .cc.incorrect {
-  color: #AD186B;
-}
-
-.theme--cyberspace .cc.space.incorrect {
-  border-color: #AD186B;
-}
-
-.theme--cyberspace select {
-  background-color: #222822;
-  color: #27D27F;
-  border-color: #27D27F;
-}
-
-body.theme--awaken {
-  background-color: #25252F;
-}
-
-.theme--awaken #cursor > span {
-  background-color: #24E7E8;
-}
-
-.theme--awaken #text-box, .theme--awaken .stat {
-  color: #E5C441;
-}
-
-.theme--awaken h1, .theme--awaken .cc.correct {
-  color: #24E7E8;
-}
-
-.theme--awaken .cc.incorrect {
-  color: #EA315C;
-}
-
-.theme--awaken .cc.space.incorrect {
-  border-color: #EA315C;
-}
-
-.theme--awaken select {
-  background-color: #25252F;
-  color: #24E7E8;
-  border-color: #24E7E8;
-}
-
-body.theme--mecha {
-  background-color: #080808;
-}
-
-.theme--mecha #cursor > span {
-  background-color: #45CB30;
-}
-
-.theme--mecha #text-box {
-  color: #5E359A;
-}
-
-.theme--mecha h1, .theme--mecha .cc.correct, .theme--mecha .stat {
-  color: #45CB30;
-}
-
-.theme--mecha .cc.incorrect {
-  color: #FF2811;
-}
-
-.theme--mecha .cc.space.incorrect {
-  border-color: #FF2811;
-}
-
-.theme--mecha select {
-  background-color: #080808;
-  color: #EC7317;
-  border-color: #EC7317;
 }
 
 #cursor {

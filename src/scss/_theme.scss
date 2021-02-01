@@ -1,0 +1,38 @@
+@mixin new(
+  $name,
+  $background-color,
+  $text-color,
+  $cursor-color,
+  $error-color,
+  $accent-color
+) {
+  body.theme--#{$name} {
+    background-color: $background-color;
+
+    #cursor > span {
+      background-color: $cursor-color;
+    }
+
+    #text-box, .stat {
+      color: $text-color;
+    }
+
+    h1, .cc.correct {
+      color: $cursor-color;
+    }
+
+    .cc.incorrect {
+      color: $error-color;
+    }
+
+    .cc.space.incorrect {
+      border-color: $error-color
+    }
+
+    select {
+      background-color: $background-color;
+      color: $accent-color;
+      border-color: $accent-color;
+    }
+  }
+}
