@@ -13,6 +13,10 @@
       box-shadow: inset 2px 0px 0px 0px $cursor-color;
     }
 
+    .cc.cursor.cursor-after {
+      box-shadow: inset -2px 0px 0px 0px $cursor-color;
+    }
+
     .cc.cursor.cursor-hide {
       box-shadow: none;
     }

@@ -88,13 +88,19 @@ class CC { // stands for Controlled Character
     this._element.parentNode.insertBefore(element, this._element.nextSibling)
   }
 
-  setCursor() {
+  setCursorBefore() {
     const prev = document.querySelector('.cursor')
     if (prev !== null) {
       prev.classList.remove('cursor')
       prev.classList.remove('cursor-hide')
+      prev.classList.remove('cursor-after')
     }
     this._element.classList.add('cursor')
+  }
+
+  setCursorAfter() {
+    this.setCursorBefore()
+    this._element.classList.add('cursor-after')
   }
 }
 
@@ -120,7 +126,7 @@ class TextBox {
     })
     this._element.appendChild(frag)
 
-    this._ccs[0].setCursor()
+    this._ccs[0].setCursorBefore()
   }
 
   _setupListeners() {
@@ -212,7 +218,7 @@ class TextBox {
       const cc = this._ccs[this._index]
       if (cc.isCorrect()) {
         cc.revert()
-        cc.setCursor()
+        cc.setCursorBefore()
       } else {
         cc.removeFromDOM()
         this._ccs.splice(this._index, 1)
@@ -231,9 +237,9 @@ class TextBox {
 
       this._index += 1
       if (this._index < this._ccs.length) {
-        this._ccs[this._index].setCursor()
+        this._ccs[this._index].setCursorBefore()
       } else {
-        cc.insertAfter(this._cursor)
+        cc.setCursorAfter()
         if (cc.isCorrect() && this._index === this._ccs.length) this.blur()
       }
     }
@@ -448,14 +454,13 @@ class Help extends Fade {
 
 function main() {
   const texts = [
-    // `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`,
-    // `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
+    `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
     `She had always felt that the essence of human experience lay not primarily in the peak experiences, the wedding days and triumphs which stood out in the memory like dates circled in red on old calendars, but, rather, in the unself-conscious flow of little things.`,
-    // `The sky above the port was the color of television, tuned to a dead channel.`,
-    // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
-    // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
-    // `When you are wrestling for possession of a sword, the man with the handle always wins.`,
-    // `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
+    `The sky above the port was the color of television, tuned to a dead channel.`,
+    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
+    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
+    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
+    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
   ]
 
   const randomText = () => texts[Math.floor(Math.random() * texts.length)]
