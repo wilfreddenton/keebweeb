@@ -51,10 +51,11 @@ body {
 }
 
 #cursor {
-  display: inline;
-  position: relative;
+  position: absolute;
   width: 0px;
-  opacity: 1;
+  top: 0px;
+  left: 0px;
+  z-index: 100;
 }
 
 #cursor.hide {
@@ -63,8 +64,9 @@ body {
 
 #cursor > span {
   position: absolute;
-  top: 0px;
-  height: 31px;
+  left: 0px;
+  top: 10px;
+  height: 29px;
   width: 4px;
 }
 
@@ -80,6 +82,7 @@ body {
   user-select: none;
   height: 9rem;
   overflow-y: hidden;
+  overflow-wrap: break-word;
   white-space: normal;
 }
 
@@ -119,8 +122,10 @@ select {
 }
 
 .cc {
-  display: inline-block;
-  white-space: pre;
+  position: relative;
+  display: inline;
+  line-height: 3rem;
+  position: relative;
 }
 
 .cc.hide {
@@ -129,6 +134,7 @@ select {
 
 .cc.space.incorrect {
   border-bottom: 4px solid black;
+  white-space: break-spaces;
 }
 
 .c-group {

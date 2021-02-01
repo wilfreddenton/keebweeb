@@ -20,27 +20,16 @@ function listen(eventName, handler) {
     e => typeof e.detail === 'undefined' ? handler(): handler(e.detail))
 }
 
-function CGroup(parent) {
-  const cGroup = document.createElement('span')
-  cGroup.classList.add('c-group')
-  parent.appendChild(cGroup)
-  return cGroup
-}
-
 class CC { // stands for Controlled Character
-  constructor(c, group, isCorrect) {
+  constructor(c, cc, isCorrect) {
     const span = document.createElement('span')
     span.innerHTML = c
     span.classList.add('cc')
-    if (group instanceof CC) {
-      group.insertBefore(span)
-      group = group.group()
-    } else {
-      group.appendChild(span)
+    if (typeof cc !== 'undefined') {
+      cc.insertBefore(span)
     }
 
     this._char = c
-    this._group = group
     this._element = span
 
     if (typeof isCorrect !== 'undefined') {
@@ -75,13 +64,12 @@ class CC { // stands for Controlled Character
     this._element.classList.add('incorrect')
   }
 
-  group() {
-    return this._group
+  element() {
+    return this._element
   }
 
   removeFromDOM() {
     this._element.remove()
-    if (this._group.querySelectorAll('.cc').length === 0) this._group.remove()
   }
 
   currentChar() {
@@ -89,15 +77,24 @@ class CC { // stands for Controlled Character
   }
 
   lineHeight() {
-    return this._group.offsetHeight
+    return 48;
   }
 
   insertBefore(element) {
-    this._group.insertBefore(element, this._element)
+    this._element.parentNode.insertBefore(element, this._element)
   }
 
   insertAfter(element) {
-    this._group.insertBefore(element, this._element.nextSibling)
+    this._element.parentNode.insertBefore(element, this._element.nextSibling)
+  }
+
+  setCursor() {
+    const prev = document.querySelector('.cursor')
+    if (prev !== null) {
+      prev.classList.remove('cursor')
+      prev.classList.remove('cursor-hide')
+    }
+    this._element.classList.add('cursor')
   }
 }
 
@@ -105,26 +102,25 @@ class TextBox {
   constructor(element, text) {
     this._parent = element
     this._cursorInterval = null
-    this._cursorIntervalParams = [() => this._cursor.classList.toggle('hide'), 530]
+    this._cursorIntervalParams = [() => this._cursor().classList.toggle('cursor-hide'), 530]
     this._reset(text)
     this._setupListeners()
   }
 
-  _render() {
-    this._cursor.appendChild(document.createElement('span'))
-    this._cursor.id = "cursor"
-    this._cursor.classList.add('focused')
+  _cursor() {
+    return document.querySelector('.cursor')
+  }
 
+  _render() {
     const frag = document.createDocumentFragment();
-    let cGroup = null
     this._text.split("").forEach(c => {
-      if (cGroup === null) cGroup = CGroup(frag)
-      const cc = new CC(c, cGroup)
+      const cc = new CC(c)
+      frag.appendChild(cc.element())
       this._ccs.push(cc)
-      if (c === " ") cGroup = null
     })
     this._element.appendChild(frag)
-    this._ccs[this._index].insertBefore(this._cursor)
+
+    this._ccs[0].setCursor()
   }
 
   _setupListeners() {
@@ -171,7 +167,6 @@ class TextBox {
     if (typeof this._element !== 'undefined') this._element.remove()
     this._element = document.createElement('div')
     this._parent.appendChild(this._element)
-    this._cursor = document.createElement('span')
     this._text = text.trim()
     this._ccs = []
     this._index = 0
@@ -187,7 +182,7 @@ class TextBox {
 
   focus() {
     if (!this._isFocused()) this._element.classList.add('focused')
-    this._cursor.classList.remove('hide')
+    this._cursor().classList.remove('cursor-hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
@@ -195,7 +190,7 @@ class TextBox {
   blur() {
     this._element.classList.remove('focused')
     clearInterval(this._cursorInterval)
-    this._cursor.classList.add('hide')
+    this._cursor().classList.add('cursor-hide')
     emit(EventTypingStop)
   }
 
@@ -207,7 +202,7 @@ class TextBox {
     e.preventDefault()
     e.stopPropagation()
 
-    const cursorTopBefore = this._cursor.offsetTop
+    const cursorTopBefore = this._cursor().offsetTop - 9
     this.focus()
     emit(EventTypingStart)
 
@@ -216,8 +211,8 @@ class TextBox {
       this._index -= 1
       const cc = this._ccs[this._index]
       if (cc.isCorrect()) {
-        cc.insertBefore(this._cursor)
         cc.revert()
+        cc.setCursor()
       } else {
         cc.removeFromDOM()
         this._ccs.splice(this._index, 1)
@@ -236,7 +231,7 @@ class TextBox {
 
       this._index += 1
       if (this._index < this._ccs.length) {
-        this._ccs[this._index].insertBefore(this._cursor)
+        this._ccs[this._index].setCursor()
       } else {
         cc.insertAfter(this._cursor)
         if (cc.isCorrect() && this._index === this._ccs.length) this.blur()
@@ -244,14 +239,13 @@ class TextBox {
     }
     emit(EventProgress, {index: this._index, length: this._ccs.length})
 
-    const cursorTopAfter = this._cursor.offsetTop
+    const cursorTopAfter = this._cursor().offsetTop - 9
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
     if (cursorTopDiff === 0) return
     const lineHeight = this._ccs[this._text.length - 1].lineHeight()
     const marginTop = this._element.style.marginTop === ""
           ? 0
           : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
-    console.log(cursorTopAfter, cursorTopDiff)
     if (cursorTopDiff > 0
         && cursorTopAfter > lineHeight
         && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
@@ -454,13 +448,14 @@ class Help extends Fade {
 
 function main() {
   const texts = [
-    `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
+    // `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`,
+    // `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
     `She had always felt that the essence of human experience lay not primarily in the peak experiences, the wedding days and triumphs which stood out in the memory like dates circled in red on old calendars, but, rather, in the unself-conscious flow of little things.`,
-    `The sky above the port was the color of television, tuned to a dead channel.`,
-    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
-    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
-    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
-    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
+    // `The sky above the port was the color of television, tuned to a dead channel.`,
+    // `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
+    // `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
+    // `When you are wrestling for possession of a sword, the man with the handle always wins.`,
+    // `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`
   ]
 
   const randomText = () => texts[Math.floor(Math.random() * texts.length)]
