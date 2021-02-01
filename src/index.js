@@ -3,7 +3,9 @@ import './scss/index.scss'
 const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
       EventStop = 'keebweeb-stop',
-      EventReset = 'keebweeb-reset'
+      EventReset = 'keebweeb-reset',
+      EventTypingStart = 'keebweeb-typing-start',
+      EventTypingStop = 'keebweeb-typing-stop'
 
 function emit(eventName, data) {
   document.dispatchEvent(
@@ -120,7 +122,7 @@ class TextBox {
   }
 
   _setupListeners() {
-    document.addEventListener('click', this.unFocus.bind(this))
+    document.addEventListener('click', this.blur.bind(this))
     this._element.addEventListener('click', e => {
       e.stopPropagation()
       this.focus()
@@ -132,7 +134,7 @@ class TextBox {
         e.preventDefault()
         return
       case 'Escape':
-        this.unFocus()
+        this.blur()
         return
       case 'Enter':
         this.focus()
@@ -152,7 +154,7 @@ class TextBox {
     })
     listen(EventStop, () => {
       this._complete = true
-      this.unFocus()
+      this.blur()
     })
     listen(EventReset, ({text}) => {
       this._reset(text)
@@ -184,10 +186,11 @@ class TextBox {
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 
-  unFocus() {
+  blur() {
     this._element.classList.remove('focused')
     clearInterval(this._cursorInterval)
     this._cursor.classList.add('hide')
+    emit(EventTypingStop)
   }
 
   input(e) {
@@ -200,6 +203,7 @@ class TextBox {
 
     const cursorTopBefore = this._cursor.offsetTop
     this.focus()
+    emit(EventTypingStart)
 
     if (key === "Backspace") {
       if (this._index < 1) return
@@ -231,7 +235,7 @@ class TextBox {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
-        if (isValid && this._index === this._text.length) this.unFocus()
+        if (isValid && this._index === this._text.length) this.blur()
       }
     }
     emit(EventProgress, {index: this._index, length: this._text.length})
@@ -256,9 +260,32 @@ class TextBox {
   }
 }
 
-class WPM {
-  constructor(element, intervalMS) {
+class Fade {
+  constructor(element) {
     this._element = element
+    this._timeout = null
+
+    this._setup()
+  }
+
+  _setup() {
+    listen(EventTypingStart, () => {
+      clearTimeout(this._timeout)
+      this._element.classList.add('typing')
+      this._timeout = setTimeout(() => {
+        emit(EventTypingStop)
+      }, 2000)
+    })
+    listen(EventTypingStop, () => {
+      clearTimeout(this._timeout)
+      this._element.classList.remove('typing')
+    })
+  }
+}
+
+class WPM extends Fade {
+  constructor(element, intervalMS) {
+    super(element)
     this._intervalMS = intervalMS || 1000
 
     this._reset()
@@ -304,12 +331,11 @@ class WPM {
     const grossWPM = Math.round((this._numEntries / 5) / numMins)
     this._netWPM = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
   }
-
 }
 
-class Accuracy {
+class Accuracy extends Fade {
   constructor(element) {
-    this._element = element
+    super(element)
 
     this._reset()
     this._setupListeners()
@@ -341,8 +367,9 @@ class Accuracy {
   }
 }
 
-class Progress {
+class Progress extends Fade {
   constructor(element) {
+    super(element)
     this._element = element
 
     this._reset()
@@ -369,8 +396,9 @@ class Progress {
   }
 }
 
-class Select {
+class Select extends Fade {
   constructor(element, labels, prefix) {
+    super(element)
     this._element = element
     this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
     this._prefix = prefix
@@ -413,6 +441,12 @@ class Select {
   }
 }
 
+class Help extends Fade {
+  constructor(element) {
+    super(element)
+  }
+}
+
 function main() {
   const texts = [
     `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
@@ -430,6 +464,7 @@ function main() {
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
+  new Help(document.getElementById('help'))
   const textBox = new TextBox(document.getElementById('text-box'), randomText())
   listen(EventStop, () => {
     emit(EventReset, {text: randomText()})

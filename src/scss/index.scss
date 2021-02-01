@@ -138,3 +138,14 @@ select {
 .c-group {
   display: inline-block;
 }
+
+.fade {
+  opacity: 1;
+  transition: opacity 1000ms;
+}
+
+.fade.typing {
+  opacity: 0.33
+}
+
+
