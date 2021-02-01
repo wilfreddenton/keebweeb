@@ -274,6 +274,7 @@ class Fade {
   }
 
   _setup() {
+    this._element.classList.add('fade')
     listen(EventTypingStart, () => {
       clearTimeout(this._timeout)
       this._element.classList.add('typing')
