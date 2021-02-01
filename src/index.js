@@ -28,21 +28,26 @@ function CGroup(parent) {
 }
 
 class CC { // stands for Controlled Character
-  constructor(c, group) {
+  constructor(c, group, isCorrect) {
     const span = document.createElement('span')
     span.innerHTML = c
     span.classList.add('cc')
-    group.appendChild(span)
+    if (group instanceof CC) {
+      group.insertBefore(span)
+      group = group.group()
+    } else {
+      group.appendChild(span)
+    }
 
     this._char = c
     this._group = group
     this._element = span
-    this._isValid = null
-    this._numErrors = 0
-  }
 
-  isValid() {
-    return this._isValid
+    if (typeof isCorrect !== 'undefined') {
+      isCorrect ? this.setCorrect() : this.setIncorrect()
+    }
+
+    if (this._char === ' ') this._element.classList.add('space')
   }
 
   revert() {
@@ -52,21 +57,22 @@ class CC { // stands for Controlled Character
     this._element.innerHTML = this._char
   }
 
-  validate(c) {
-    if (c === " ") this._element.classList.add('space')
-    const isValid = this._char === c
-    this._element.classList.add(isValid ? 'correct' : 'incorrect')
-    this._element.innerHTML = c
-    let errorDelta = 0
-    if (!isValid) {
-      errorDelta = 1
-    } else if (this._isValid === false) {
-      errorDelta = -this._numErrors
-    }
-    this._numErrors += errorDelta
-    this._isValid = isValid
-    emit(EventEntry, {errorDelta})
-    return this._isValid
+  compare(c) {
+    return this._char === c
+  }
+
+  isCorrect() {
+    return this._element.classList.contains('correct')
+  }
+
+  setCorrect() {
+    this._element.classList.remove('incorrect')
+    this._element.classList.add('correct')
+  }
+
+  setIncorrect() {
+    this._element.classList.remove('correct')
+    this._element.classList.add('incorrect')
   }
 
   group() {
@@ -209,36 +215,34 @@ class TextBox {
       if (this._index < 1) return
       this._index -= 1
       const cc = this._ccs[this._index]
-      if (this._index < this._text.length) {
+      if (cc.isCorrect()) {
         cc.insertBefore(this._cursor)
         cc.revert()
       } else {
-        this._ccs[this._index - 1].insertAfter(this._cursor)
         cc.removeFromDOM()
         this._ccs.splice(this._index, 1)
+        emit(EventEntry, {entryDelta: 0, errorDelta: -1})
       }
     } else {
-      let cc = null
-      if (this._index < this._text.length) {
-        cc = this._ccs[this._index]
+      const cc = this._ccs[this._index]
+      if (cc.compare(key)) {
+        cc.setCorrect()
+        emit(EventEntry, {entryDelta: 1, errorDelta: 0})
       } else {
-        const prevCC = this._ccs[this._index - 1]
-        const group = prevCC.currentChar() === ' ' ? CGroup(this._element) : prevCC.group()
-        cc = new CC('\n', group)
-        this._ccs.push(cc)
+        const errorCC = new CC(key, cc, false)
+        this._ccs.splice(this._index, 0, errorCC)
+        emit(EventEntry, {entryDelta: 1, errorDelta: 1})
       }
 
-      const isValid = cc.validate(key)
-
       this._index += 1
-      if (this._index < this._text.length) {
+      if (this._index < this._ccs.length) {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
-        if (isValid && this._index === this._text.length) this.blur()
+        if (cc.isCorrect() && this._index === this._ccs.length) this.blur()
       }
     }
-    emit(EventProgress, {index: this._index, length: this._text.length})
+    emit(EventProgress, {index: this._index, length: this._ccs.length})
 
     const cursorTopAfter = this._cursor.offsetTop
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
@@ -247,6 +251,7 @@ class TextBox {
     const marginTop = this._element.style.marginTop === ""
           ? 0
           : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
+    console.log(cursorTopAfter, cursorTopDiff)
     if (cursorTopDiff > 0
         && cursorTopAfter > lineHeight
         && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
@@ -293,9 +298,9 @@ class WPM extends Fade {
   }
 
   _setupListeners() {
-    listen(EventEntry, ({errorDelta}) => {
+    listen(EventEntry, ({entryDelta, errorDelta}) => {
       if (this._startTime === null) this._startTime = new Date().getTime()
-      this._numEntries += 1
+      this._numEntries += entryDelta
       this._numErrors += errorDelta
 
       this._updateStats()
@@ -342,8 +347,8 @@ class Accuracy extends Fade {
   }
 
   _setupListeners() {
-    listen(EventEntry, ({errorDelta}) => {
-      this._numEntries += 1
+    listen(EventEntry, ({entryDelta, errorDelta}) => {
+      this._numEntries += entryDelta
       this._numErrors += errorDelta > -1 ? errorDelta : 0
       this._render()
     })
