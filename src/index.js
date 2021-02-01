@@ -1,3 +1,5 @@
+import './scss/index.scss'
+
 const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
       EventStop = 'keebweeb-stop',
@@ -419,4 +421,4 @@ function main() {
   })
 }
 
-document.addEventListener('DOMContentLoaded', main)
+main()

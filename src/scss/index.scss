@@ -1,10 +1,15 @@
-* {
+html {
   box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 
 body {
   padding: 0;
   margin: 0;
+  font-family: 'recursive', sans-serif;
 }
 
 body.theme--80082-blu {
@@ -19,7 +24,7 @@ body.theme--80082-blu {
   color: #6E7886;
 }
 
-.theme--80082-blu .cc.correct {
+.theme--80082-blu h1, .theme--80082-blu .cc.correct {
   color: #67C4E3;
 }
 
@@ -49,7 +54,7 @@ body.theme--cyberspace {
   color: #987AD4;
 }
 
-.theme--cyberspace .cc.correct {
+.theme--cyberspace h1, .theme--cyberspace .cc.correct {
   color: #27D27F;
 }
 
@@ -79,7 +84,7 @@ body.theme--awaken {
   color: #E5C441;
 }
 
-.theme--awaken .cc.correct {
+.theme--awaken h1, .theme--awaken .cc.correct {
   color: #24E7E8;
 }
 
@@ -109,7 +114,7 @@ body.theme--mecha {
   color: #5E359A;
 }
 
-.theme--mecha .cc.correct, .theme--mecha .stat {
+.theme--mecha h1, .theme--mecha .cc.correct, .theme--mecha .stat {
   color: #45CB30;
 }
 
