@@ -89,6 +89,15 @@ body {
   transition: margin-top 300ms;
 }
 
+#help ul li {
+  list-style-type: none;
+}
+
+.keycap {
+  font-weight: 600;
+  font-variation-settings: 'MONO' 1;
+}
+
 .stat {
   font-family: 'recursive';
   font-size: 1.2rem;

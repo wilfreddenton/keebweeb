@@ -134,6 +134,16 @@ class TextBox {
       case 'Enter':
         this.focus()
         return
+      case 'n':
+        if (!this._isFocused()) {
+          emit(EventStop, {wait: false})
+          return
+        }
+      case 'r':
+        if (!this._isFocused()) {
+          emit(EventReset, {text: this._text})
+          return
+        }
       }
       this.input(e)
     })
@@ -160,8 +170,12 @@ class TextBox {
     this.focus()
   }
 
+  _isFocused() {
+    return this._element.classList.contains('focused')
+  }
+
   focus() {
-    if (!this._element.classList.contains('focused')) this._element.classList.add('focused')
+    if (!this._isFocused()) this._element.classList.add('focused')
     this._cursor.classList.remove('hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
@@ -214,7 +228,7 @@ class TextBox {
         this._ccs[this._index].insertBefore(this._cursor)
       } else {
         cc.insertAfter(this._cursor)
-        if (isValid && this._index === this._text.length) emit(EventStop)
+        if (isValid && this._index === this._text.length) this.unFocus()
       }
     }
     emit(EventProgress, {index: this._index, length: this._text.length})
@@ -415,9 +429,7 @@ function main() {
   new Progress(document.getElementById('progress'))
   const textBox = new TextBox(document.getElementById('text-box'), randomText())
   listen(EventStop, () => {
-    setTimeout(() => {
-      emit(EventReset, {text: randomText()})
-    }, 2000)
+    emit(EventReset, {text: randomText()})
   })
 }
 

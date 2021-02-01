@@ -13,6 +13,7 @@ module.exports = {
       use: ["style-loader", "css-loader", "sass-loader"]
     }]
   },
+  devtool: 'inline-source-map',
   devServer: {
     contentBase: './dist'
   },
