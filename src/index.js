@@ -107,7 +107,7 @@ class TextBox {
 
   _setupListeners() {
     document.addEventListener('click', this.blur.bind(this))
-    this._element.addEventListener('click', e => {
+    this._parent.addEventListener('click', e => {
       e.stopPropagation()
       this.focus()
     })
