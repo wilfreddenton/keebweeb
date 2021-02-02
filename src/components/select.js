@@ -20,7 +20,7 @@ export default class Select extends Fade {
   }
 
   _setupListeners() {
-    this._element.addEventListener('change', e => {
+    this.addEventListener('change', e => {
       this._updateSelected(e.target.value)
     })
   }
@@ -33,13 +33,13 @@ export default class Select extends Fade {
 
     this._setSelected(selected)
     document.body.classList.add(selected)
-    this._element.value = selected
+    this.element().value = selected
   }
 
   _render() {
-    this._element.innerHTML = this._options.reduce((html, {label, value}) => {
+    this.setInnerHTML(this._options.reduce((html, {label, value}) => {
       return `${html}<option value="${value}">${label}</option>\n`
-    }, '')
+    }, ''))
 
     this._updateSelected(this._getSelected() === null ? this._options[0].value : this._getSelected())
   }
