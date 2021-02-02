@@ -38,11 +38,11 @@
 
 @include theme.new(
   $name: 'superuser',
-  $background-color: #1B1E2A,
-  $text-color: #4F6872,
-  $cursor-color: #76CC94,
-  $error-color: #FF6961,
-  $accent-color: #76CC94,
+  $background-color: #252A36,
+  $text-color: #425563,
+  $cursor-color: #80E0A7,
+  $error-color: #CF4A5D,
+  $accent-color: #80E0A7,
 );
 
 html {
