@@ -242,13 +242,12 @@ class TextBox {
 
 function main() {
   const texts = [
-    `She had always felt that the essence of human experience lay not primarily in the peak experiences, the wedding days and triumphs which stood out in the memory like dates circled in red on old calendars, but, rather, in the unself-conscious flow of little things.`,
-    `The sky above the port was the color of television, tuned to a dead channel.`,
-    `In the beginning was the Word. Then came the fucking word processor. Then came the thought processor. Then came the death of literature. And so it goes.`,
-    `Deep in the human unconscious is a pervasive need for a logical universe that makes sense. But the real universe is always one step beyond logic.`,
-    `When you are wrestling for possession of a sword, the man with the handle always wins.`,
-    `Mere data makes a man. A and C and T and G. The alphabet of you. All from four symbols. I am only two: 1 and 0.`,
-    `We are created for precisely this sort of suffering. In the end, it is all we are, these limpid tide pools of self-consciousness between crashing waves of pain. We are destined and designed to bear our pain with us, hugging it tight to our bellies like the young Spartan thief hiding a wolf cub so it can eat away our insides.`,
+    `Irrevocable commitment to any religion is not only intellectual suicide; it is positive unfaith because it closes the mind to any new vision of the world. Faith is, above all, open-ness--an act of trust in the unknown.`,
+    `The wise man molds himself--the fool lives only to die.`,
+    `Prophecy and prescience--How can they be put to the test in the face of the unanswered question? Consider: How much is actual prediction of the "wave form" (as Muad'Dib referred to his vision-image) and how much is the prophet shaping the future to fit the prophecy?`,
+    `Expectations are the cause of all my problems.`,
+    `If the ego is not regularly and repeatedly dissolved in the unbounded hyperspace of the Transcendent Other, there will always be slow drift away from the sense of self as part of nature's larger whole. The ultimate consequence of this drift is the fatal ennui that now permeates Western civilization.`,
+    `If there are gods and they are just, then they will not care how devout you have been, but will welcome you based on the virtues you have lived by.`
   ]
 
   const randomText = () => texts[Math.floor(Math.random() * texts.length)]
