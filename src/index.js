@@ -168,6 +168,7 @@ class TextBox {
     this._index = 0
     this._complete = false
 
+    this._element.style.marginTop = '0rem'
     this._render()
     this.focus()
   }
