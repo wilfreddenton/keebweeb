@@ -1,24 +1,19 @@
 import './scss/index.scss'
 
-const EventEntry = 'keebweeb-entry',
-      EventProgress = 'keepweeb-progress',
-      EventStop = 'keebweeb-stop',
-      EventReset = 'keebweeb-reset',
-      EventTypingStart = 'keebweeb-typing-start',
-      EventTypingStop = 'keebweeb-typing-stop'
+import {
+  EventEntry,
+  EventProgress,
+  EventStop,
+  EventReset,
+  EventTypingStart,
+  EventTypingStop,
+  emit,
+  listen
+} from './events.js'
 
-function emit(eventName, data) {
-  document.dispatchEvent(
-    typeof data === 'undefined'
-      ? new Event(eventName)
-      : new CustomEvent(eventName, {detail: data}))
-}
+import { Fade } from './utils.js'
 
-function listen(eventName, handler) {
-  document.addEventListener(
-    eventName,
-    e => typeof e.detail === 'undefined' ? handler(): handler(e.detail))
-}
+import Select from './components/select.js'
 
 class CC { // stands for Controlled Character
   constructor(c, cc, isCorrect) {
@@ -265,30 +260,6 @@ class TextBox {
   }
 }
 
-class Fade {
-  constructor(element) {
-    this._element = element
-    this._timeout = null
-
-    this._setup()
-  }
-
-  _setup() {
-    this._element.classList.add('fade')
-    listen(EventTypingStart, () => {
-      clearTimeout(this._timeout)
-      this._element.classList.add('typing')
-      this._timeout = setTimeout(() => {
-        emit(EventTypingStop)
-      }, 2000)
-    })
-    listen(EventTypingStop, () => {
-      clearTimeout(this._timeout)
-      this._element.classList.remove('typing')
-    })
-  }
-}
-
 class WPM extends Fade {
   constructor(element, intervalMS) {
     super(element)
@@ -399,51 +370,6 @@ class Progress extends Fade {
 
   _render() {
     this._element.innerHTML = `Progress: ${this._progress}%`
-  }
-}
-
-class Select extends Fade {
-  constructor(element, labels, prefix) {
-    super(element)
-    this._element = element
-    this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
-    this._prefix = prefix
-
-    this._setupListeners()
-    this._render()
-  }
-
-  _getSelected() {
-    return localStorage.getItem(`${this._prefix}--selected`)
-  }
-
-  _setSelected(selected) {
-    window.localStorage.setItem(`${this._prefix}--selected`, selected)
-  }
-
-  _setupListeners() {
-    this._element.addEventListener('change', e => {
-      this._updateSelected(e.target.value)
-    })
-  }
-
-  _updateSelected(selected) {
-    const currentSelection = this._getSelected()
-    if (currentSelection !== null) {
-      document.body.classList.remove(currentSelection)
-    }
-
-    this._setSelected(selected)
-    document.body.classList.add(selected)
-    this._element.value = selected
-  }
-
-  _render() {
-    this._element.innerHTML = this._options.reduce((html, {label, value}) => {
-      return `${html}<option value="${value}">${label}</option>\n`
-    }, '')
-
-    this._updateSelected(this._getSelected() === null ? this._options[0].value : this._getSelected())
   }
 }
 
