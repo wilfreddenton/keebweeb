@@ -36,6 +36,15 @@
   $accent-color: #EC7317,
 );
 
+@include theme.new(
+  $name: 'superuser',
+  $background-color: #1B1E2A,
+  $text-color: #4F6872,
+  $cursor-color: #76CC94,
+  $error-color: #FF6961,
+  $accent-color: #76CC94,
+);
+
 html {
   box-sizing: border-box;
 }

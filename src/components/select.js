@@ -1,11 +1,12 @@
 import { Fade } from '../utils.js'
 
 export default class Select extends Fade {
-  constructor(element, labels, prefix) {
+  constructor(element, labels, defaultIndex, prefix) {
     super(element)
 
     this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
     this._prefix = prefix
+    this._defaultIndex = defaultIndex
 
     this._setupListeners()
     this._render()
@@ -41,6 +42,6 @@ export default class Select extends Fade {
       return `${html}<option value="${value}">${label}</option>\n`
     }, ''))
 
-    this._updateSelected(this._getSelected() === null ? this._options[0].value : this._getSelected())
+    this._updateSelected(this._getSelected() === null ? this._options[this._defaultIndex].value : this._getSelected())
   }
 }
