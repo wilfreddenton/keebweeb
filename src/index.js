@@ -259,10 +259,19 @@ function main() {
   new Fade(document.getElementById('help'))
   let i = 0
   const textBox = new TextBox(document.getElementById('text-box'), texts[i])
+
+  const resetHandler = (e) => {
+    i = new URLSearchParams(window.location.search).get('index')
+    emit(EventReset, {text: texts[i]})
+  }
+  window.onpopstate = resetHandler
   listen(EventStop, () => {
     i = (i + 1) % texts.length
+    history.pushState({index: i}, 'KeebWeeb', `?index=${i}`)
     emit(EventReset, {text: texts[i]})
   })
+
+  resetHandler()
 }
 
 main()
