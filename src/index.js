@@ -44,6 +44,11 @@ class CC extends Element { // stands for Controlled Character
     this.classList().add('incorrect')
   }
 
+  setChar(c) {
+    this._char = c
+    this.revert()
+  }
+
   revert() {
     this.classList().remove('space', 'correct', 'incorrect')
     this.setInnerHTML(this._char)
@@ -81,11 +86,14 @@ class CC extends Element { // stands for Controlled Character
 }
 
 class TextBox {
-  constructor(element, text) {
+  constructor(element) {
+    this._element = document.createElement('div')
     this._parent = element
+    this._parent.appendChild(this._element)
+    this._text = ""
+    this._ccs = []
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor().classList.toggle('cursor-hide'), 530]
-    this._reset(text)
     this._setupListeners()
   }
 
@@ -94,13 +102,23 @@ class TextBox {
   }
 
   _render() {
-    const frag = document.createDocumentFragment();
-    this._text.split("").forEach(c => {
-      const cc = new CC(c)
-      frag.appendChild(cc.element())
-      this._ccs.push(cc)
-    })
-    this._element.appendChild(frag)
+    let i = 0
+    while (i < this._text.length) {
+      const c = this._text[i]
+      if (i < this._ccs.length) {
+        this._ccs[i].setChar(c)
+      } else {
+        const cc = new CC(c)
+        this._element.appendChild(cc.element())
+        this._ccs.push(cc)
+      }
+      i += 1
+    }
+
+    while (i < this._ccs.length) {
+      this._ccs[i].remove()
+      this._ccs.splice(i, 1)
+    }
 
     this._ccs[0].setCursorBefore()
   }
@@ -146,11 +164,7 @@ class TextBox {
   }
 
   _reset(text) {
-    if (typeof this._element !== 'undefined') this._element.remove()
-    this._element = document.createElement('div')
-    this._parent.appendChild(this._element)
     this._text = text.trim()
-    this._ccs = []
     this._index = 0
     this._complete = false
 
@@ -257,11 +271,12 @@ function main() {
   new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
   new Fade(document.getElementById('help'))
-  let i = 0
-  const textBox = new TextBox(document.getElementById('text-box'), texts[i])
+  const textBox = new TextBox(document.getElementById('text-box'))
 
+  let i = 0
   const resetHandler = (e) => {
-    i = new URLSearchParams(window.location.search).get('index')
+    const params = new URLSearchParams(window.location.search)
+    i = params.has('index') ? params.get('index') : 0
     emit(EventReset, {text: texts[i]})
   }
   window.onpopstate = resetHandler
