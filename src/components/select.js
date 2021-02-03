@@ -34,7 +34,7 @@ export default class Select extends Fade {
 
     this._setSelected(selected)
     document.body.classList.add(selected)
-    this.element().value = selected
+    this.setValue(selected)
   }
 
   _render() {

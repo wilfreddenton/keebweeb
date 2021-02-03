@@ -73,7 +73,7 @@ class CC extends Element { // stands for Controlled Character
   }
 
   setCursorBefore() {
-    [this.element().previousSibling, this.element().nextSibling].forEach(e => {
+    this.adjacentSiblings().forEach(e => {
       if (e !== null) e.classList.remove('cursor', 'cursor-hide', 'cursor-after')
     })
     this.classList().add('cursor')
@@ -85,9 +85,9 @@ class CC extends Element { // stands for Controlled Character
   }
 }
 
-class TextBox {
+class TextBox extends Element {
   constructor(element) {
-    this._element = document.createElement('div')
+    super(document.createElement('div'))
     this._parent = element
     this._parent.appendChild(this._element)
     this._text = ""
@@ -101,6 +101,16 @@ class TextBox {
     return document.querySelector('.cursor')
   }
 
+  _reset(text) {
+    this._text = text.trim()
+    this._index = 0
+    this._complete = false
+
+    this._element.style.marginTop = '0rem'
+    this._render()
+    this.focus()
+  }
+
   _render() {
     let i = 0
     while (i < this._text.length) {
@@ -109,7 +119,7 @@ class TextBox {
         this._ccs[i].setChar(c)
       } else {
         const cc = new CC(c)
-        this._element.appendChild(cc.element())
+        this.appendChild(cc)
         this._ccs.push(cc)
       }
       i += 1
@@ -131,28 +141,7 @@ class TextBox {
     })
     document.addEventListener('keydown', e => {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
-      switch(e.key) {
-      case 'Tab':
-        e.preventDefault()
-        return
-      case 'Escape':
-        this.blur()
-        return
-      case 'Enter':
-        this.focus()
-        return
-      case 'n':
-        if (!this._isFocused()) {
-          emit(EventStop, {wait: false})
-          return
-        }
-      case 'r':
-        if (!this._isFocused()) {
-          emit(EventReset, {text: this._text})
-          return
-        }
-      }
-      this.input(e)
+      this._entryHandler(e)
     })
     listen(EventStop, () => {
       this._complete = true
@@ -163,36 +152,34 @@ class TextBox {
     })
   }
 
-  _reset(text) {
-    this._text = text.trim()
-    this._index = 0
-    this._complete = false
-
-    this._element.style.marginTop = '0rem'
-    this._render()
-    this.focus()
+  _entryHandler(e) {
+    switch(e.key) {
+    case 'Tab':
+      e.preventDefault()
+      break
+    case 'Escape':
+      this.blur()
+      break
+    case 'Enter':
+      this.focus()
+      break
+    case 'n':
+      if (!this._isFocused()) {
+        emit(EventStop, {wait: false})
+        break
+      }
+    case 'r':
+      if (!this._isFocused()) {
+        emit(EventReset, {text: this._text})
+        break
+      }
+    default:
+      this._input(e)
+    }
   }
 
-  _isFocused() {
-    return this._element.classList.contains('focused')
-  }
-
-  focus() {
-    if (!this._isFocused()) this._element.classList.add('focused')
-    this._cursor().classList.remove('cursor-hide')
-    clearInterval(this._cursorInterval)
-    this._cursorInterval = setInterval(...this._cursorIntervalParams)
-  }
-
-  blur() {
-    this._element.classList.remove('focused')
-    clearInterval(this._cursorInterval)
-    this._cursor().classList.add('cursor-hide')
-    emit(EventTypingStop)
-  }
-
-  input(e) {
-    if (!this._element.classList.contains('focused')) return
+  _input(e) {
+    if (!this._isFocused()) return
     if (this._complete) return
     const key = e.key
     if (key !== "Backspace" && !/^.$/.test(key)) return
@@ -252,6 +239,24 @@ class TextBox {
         && this._element.offsetTop !== 0) {
       this._element.style.marginTop = `${marginTop + 3}rem`
     }
+  }
+
+  _isFocused() {
+    return this.classList().contains('focused')
+  }
+
+  focus() {
+    if (!this._isFocused()) this.classList().add('focused')
+    this._cursor().classList.remove('cursor-hide')
+    clearInterval(this._cursorInterval)
+    this._cursorInterval = setInterval(...this._cursorIntervalParams)
+  }
+
+  blur() {
+    this.classList().remove('focused')
+    clearInterval(this._cursorInterval)
+    this._cursor().classList.add('cursor-hide')
+    emit(EventTypingStop)
   }
 }
 

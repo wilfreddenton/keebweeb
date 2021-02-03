@@ -14,16 +14,16 @@ class Element {
     this._element = element
   }
 
-  element() {
-    return this._element
-  }
-
   getInnerHTML() {
     return this._element.innerHTML
   }
 
   setInnerHTML(html) {
     this._element.innerHTML = html
+  }
+
+  setValue(v) {
+    this._element.value = v
   }
 
   classList() {
@@ -44,6 +44,15 @@ class Element {
 
   addEventListener(event, f) {
     return this._element.addEventListener(event, f)
+  }
+
+  adjacentSiblings() {
+    return [this._element.previousSibling, this._element.nextSibling]
+  }
+
+  appendChild(child) {
+    if (child instanceof Element) child = child._element
+    this._element.appendChild(child)
   }
 }
 
