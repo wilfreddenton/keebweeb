@@ -68,10 +68,6 @@ class CC extends Element { // stands for Controlled Character
     return this.getInnerHTML()
   }
 
-  lineHeight() {
-    return 48;
-  }
-
   setCursorBefore() {
     this.adjacentSiblings().forEach(e => {
       if (e !== null) e.classList.remove('cursor', 'cursor-hide', 'cursor-after')
@@ -95,6 +91,8 @@ class TextBox extends Element {
     this._cursor = null
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('cursor-hide'), 530]
+    this._fontSize = parseInt(window.getComputedStyle(document.documentElement).fontSize.match(/\d+/)[0])
+    this._lineHeight = this._fontSize * 3
     this._setupListeners()
   }
 
@@ -108,7 +106,7 @@ class TextBox extends Element {
     this._text = text.trim()
     this._index = 0
 
-    this._element.style.marginTop = '0rem'
+    this.style().transform = 'translateY(0rem)'
     this._render()
     this._focus()
   }
@@ -157,6 +155,9 @@ class TextBox extends Element {
     case 'Enter':
       this._focus()
       break
+    case 'Backspace':
+      this._input(e, this._backspaceHandler.bind(this))
+      break
     case 'n':
       if (!this._isFocused()) {
         emit(EventStop, {wait: false})
@@ -168,71 +169,62 @@ class TextBox extends Element {
         break
       }
     default:
-      this._input(e)
+      if (!/^.$/.test(e.key)) break
+      this._input(e, this._characterHandler.bind(this))
     }
   }
 
-  _input(e) {
+  _backspaceHandler(_) {
+    if (this._index < 1) return
+    this._index -= 1
+    const cc = this._ccs[this._index]
+    if (cc.isCorrect()) {
+      cc.revert()
+      this._setCursor(cc)
+    } else {
+      this._ccs.splice(this._index, 1)
+      cc.remove()
+      emit(EventEntry, {entryDelta: 0, errorDelta: -1})
+    }
+  }
+
+  _characterHandler(c) {
+    const cc = this._ccs[this._index]
+    console.log(cc)
+    if (cc.setEntry(c)) {
+      emit(EventEntry, {entryDelta: 1, errorDelta: 0})
+    } else {
+      const errorCC = new CC(c, cc, false)
+      this._ccs.splice(this._index, 0, errorCC)
+      emit(EventEntry, {entryDelta: 1, errorDelta: 1})
+    }
+
+    this._index += 1
+    if (this._index < this._ccs.length) {
+      this._setCursor(this._ccs[this._index])
+    } else {
+      this._setCursor(cc, true)
+      if (cc.isCorrect() && this._index === this._ccs.length) this._blur()
+    }
+  }
+
+  _input(e, h) {
     if (!this._isFocused()) return
     if (this._index >= this._ccs.length) return
-    const key = e.key
-    if (key !== "Backspace" && !/^.$/.test(key)) return
     e.preventDefault()
     e.stopPropagation()
 
-    const cursorTopBefore = this._cursor.offsetTop - 9
     this._resetCursorInterval()
     emit(EventTypingStart)
 
-    if (key === "Backspace") {
-      if (this._index < 1) return
-      this._index -= 1
-      const cc = this._ccs[this._index]
-      if (cc.isCorrect()) {
-        cc.revert()
-        this._setCursor(cc)
-      } else {
-        this._ccs.splice(this._index, 1)
-        cc.remove()
-        emit(EventEntry, {entryDelta: 0, errorDelta: -1})
-      }
-    } else {
-      const cc = this._ccs[this._index]
-      if (cc.setEntry(key)) {
-        emit(EventEntry, {entryDelta: 1, errorDelta: 0})
-      } else {
-        const errorCC = new CC(key, cc, false)
-        this._ccs.splice(this._index, 0, errorCC)
-        emit(EventEntry, {entryDelta: 1, errorDelta: 1})
-      }
+    h(e.key)
 
-      this._index += 1
-      if (this._index < this._ccs.length) {
-        this._setCursor(this._ccs[this._index])
-      } else {
-        this._setCursor(cc, true)
-        if (cc.isCorrect() && this._index === this._ccs.length) this._blur()
-      }
-    }
     emit(EventProgress, {index: this._index, length: this._ccs.length})
 
-    const cursorTopAfter = this._cursor.offsetTop - 9
-    const cursorTopDiff = cursorTopAfter - cursorTopBefore
-    if (cursorTopDiff === 0) return
-    const lineHeight = this._ccs[this._text.length - 1].lineHeight()
-    const marginTop = this._element.style.marginTop === ""
-          ? 0
-          : parseInt(this._element.style.marginTop.match(/-?\d+/)[0])
-    if (cursorTopDiff > 0
-        && cursorTopAfter > lineHeight
-        && this._parent.offsetHeight !== this._element.offsetHeight + this._element.offsetTop) {
-      this._element.style.marginTop = `${marginTop - 3}rem`
-    }
-    if (cursorTopDiff < 0
-        && cursorTopBefore === lineHeight
-        && this._element.offsetTop !== 0) {
-      this._element.style.marginTop = `${marginTop + 3}rem`
-    }
+    const cursorLine = Math.round(this._cursor.offsetTop / this._lineHeight) + 1
+    const numLines = this._element.offsetHeight / this._lineHeight
+    const rems = Math.min(Math.max(0, cursorLine - 2), Math.max(0, numLines - 3))
+    this.style().transform = `translateY(${-rems*3}rem)`
   }
 
   _isFocused() {
@@ -240,13 +232,13 @@ class TextBox extends Element {
   }
 
   _resetCursorInterval() {
+    this._cursor.classList.remove('cursor-hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 
   _focus() {
     if (!this._isFocused()) this.classList().add('focused')
-    this._cursor.classList.remove('cursor-hide')
     this._resetCursorInterval()
   }
 

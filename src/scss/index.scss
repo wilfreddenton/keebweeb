@@ -56,6 +56,7 @@
 
 html {
   box-sizing: border-box;
+  font-size: 100%;
 }
 
 *, *:before, *:after {
@@ -105,9 +106,9 @@ body {
 }
 
 #text-box > div {
-  min-height: 9rem;
-  margin-top: 0rem;
-  transition: margin-top 300ms;
+  position: relative;
+  transform: translateY(0rem);
+  transition: transform 300ms;
 }
 
 #help ul li {
