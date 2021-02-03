@@ -92,28 +92,31 @@ class TextBox extends Element {
     this._parent.appendChild(this._element)
     this._text = ""
     this._ccs = []
+    this._cursor = null
     this._cursorInterval = null
-    this._cursorIntervalParams = [() => this._cursor().classList.toggle('cursor-hide'), 530]
+    this._cursorIntervalParams = [() => this._cursor.classList.toggle('cursor-hide'), 530]
     this._setupListeners()
   }
 
-  _cursor() {
-    return document.querySelector('.cursor')
+  _setCursor(cc, after) {
+    after = isUndefined(after) ? false : after
+    after ? cc.setCursorAfter() : cc.setCursorBefore()
+    this._cursor = cc._element
   }
 
   _reset(text) {
     this._text = text.trim()
     this._index = 0
-    this._complete = false
 
     this._element.style.marginTop = '0rem'
     this._render()
-    this.focus()
+    this._focus()
   }
 
   _render() {
-    let i = 0
-    while (i < this._text.length) {
+    this._ccs.splice(this._text.length).forEach(cc => cc.remove())
+
+    for (let i = 0; i < this._text.length; i += 1) {
       const c = this._text[i]
       if (i < this._ccs.length) {
         this._ccs[i].setChar(c)
@@ -122,31 +125,22 @@ class TextBox extends Element {
         this.appendChild(cc)
         this._ccs.push(cc)
       }
-      i += 1
     }
 
-    while (i < this._ccs.length) {
-      this._ccs[i].remove()
-      this._ccs.splice(i, 1)
-    }
-
-    this._ccs[0].setCursorBefore()
+    this._setCursor(this._ccs[0])
   }
 
   _setupListeners() {
-    document.addEventListener('click', this.blur.bind(this))
+    document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
       e.stopPropagation()
-      this.focus()
+      this._focus()
     })
     document.addEventListener('keydown', e => {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
       this._entryHandler(e)
     })
-    listen(EventStop, () => {
-      this._complete = true
-      this.blur()
-    })
+    listen(EventStop, this._blur.bind(this))
     listen(EventReset, ({text}) => {
       this._reset(text)
     })
@@ -158,10 +152,10 @@ class TextBox extends Element {
       e.preventDefault()
       break
     case 'Escape':
-      this.blur()
+      this._blur()
       break
     case 'Enter':
-      this.focus()
+      this._focus()
       break
     case 'n':
       if (!this._isFocused()) {
@@ -180,14 +174,14 @@ class TextBox extends Element {
 
   _input(e) {
     if (!this._isFocused()) return
-    if (this._complete) return
+    if (this._index >= this._ccs.length) return
     const key = e.key
     if (key !== "Backspace" && !/^.$/.test(key)) return
     e.preventDefault()
     e.stopPropagation()
 
-    const cursorTopBefore = this._cursor().offsetTop - 9
-    this.focus()
+    const cursorTopBefore = this._cursor.offsetTop - 9
+    this._resetCursorInterval()
     emit(EventTypingStart)
 
     if (key === "Backspace") {
@@ -196,10 +190,10 @@ class TextBox extends Element {
       const cc = this._ccs[this._index]
       if (cc.isCorrect()) {
         cc.revert()
-        cc.setCursorBefore()
+        this._setCursor(cc)
       } else {
-        cc.remove()
         this._ccs.splice(this._index, 1)
+        cc.remove()
         emit(EventEntry, {entryDelta: 0, errorDelta: -1})
       }
     } else {
@@ -214,15 +208,15 @@ class TextBox extends Element {
 
       this._index += 1
       if (this._index < this._ccs.length) {
-        this._ccs[this._index].setCursorBefore()
+        this._setCursor(this._ccs[this._index])
       } else {
-        cc.setCursorAfter()
-        if (cc.isCorrect() && this._index === this._ccs.length) this.blur()
+        this._setCursor(cc, true)
+        if (cc.isCorrect() && this._index === this._ccs.length) this._blur()
       }
     }
     emit(EventProgress, {index: this._index, length: this._ccs.length})
 
-    const cursorTopAfter = this._cursor().offsetTop - 9
+    const cursorTopAfter = this._cursor.offsetTop - 9
     const cursorTopDiff = cursorTopAfter - cursorTopBefore
     if (cursorTopDiff === 0) return
     const lineHeight = this._ccs[this._text.length - 1].lineHeight()
@@ -245,17 +239,21 @@ class TextBox extends Element {
     return this.classList().contains('focused')
   }
 
-  focus() {
-    if (!this._isFocused()) this.classList().add('focused')
-    this._cursor().classList.remove('cursor-hide')
+  _resetCursorInterval() {
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 
-  blur() {
+  _focus() {
+    if (!this._isFocused()) this.classList().add('focused')
+    this._cursor.classList.remove('cursor-hide')
+    this._resetCursorInterval()
+  }
+
+  _blur() {
     this.classList().remove('focused')
     clearInterval(this._cursorInterval)
-    this._cursor().classList.add('cursor-hide')
+    this._cursor.classList.add('cursor-hide')
     emit(EventTypingStop)
   }
 }

@@ -26,6 +26,10 @@ class Element {
     this._element.value = v
   }
 
+  style() {
+    return this._element.style
+  }
+
   classList() {
     return this._element.classList
   }
