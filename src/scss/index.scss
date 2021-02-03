@@ -45,6 +45,15 @@
   $accent-color: #80E0A7,
 );
 
+@include theme.new(
+  $name: 'muted',
+  $background-color: #171718,
+  $text-color: #D9D9D6,
+  $cursor-color: #C5B4E3,
+  $error-color: #dd1126,
+  $accent-color: #B1E4E3,
+);
+
 html {
   box-sizing: border-box;
 }

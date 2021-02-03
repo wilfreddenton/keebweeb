@@ -267,7 +267,7 @@ function main() {
 
   const randomText = () => texts[Math.floor(Math.random() * texts.length)]
 
-  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha', 'Superuser'], 4, 'theme')
+  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 5, 'theme')
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
