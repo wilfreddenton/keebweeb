@@ -91,6 +91,8 @@ class TextBox extends Element {
     this._cursor = null
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('cursor-hide'), 530]
+    this._lineHeightRem = 3
+    this._windowSize = 3
 
     this._setupListeners()
   }
@@ -127,6 +129,14 @@ class TextBox extends Element {
     this._setCursor(this._ccs[0])
   }
 
+  _complete() {
+    this._blur()
+  }
+
+  _lineHeightPx() {
+    return this._fontSize * this._lineHeightRem
+  }
+
   _setupListeners() {
     window.addEventListener('resize', debounce(this._resizeHandler.bind(this), 100))
     document.addEventListener('click', this._blur.bind(this))
@@ -146,7 +156,6 @@ class TextBox extends Element {
 
   _resizeHandler(e) {
     this._fontSize = getRootFontSize()
-    this._lineHeight = this._fontSize * 3
     this._scrollCursorIntoView()
   }
 
@@ -209,7 +218,7 @@ class TextBox extends Element {
       this._setCursor(this._ccs[this._index])
     } else {
       this._setCursor(cc, true)
-      if (cc.isCorrect() && this._index === this._ccs.length) this._blur()
+      if (cc.isCorrect() && this._index === this._ccs.length) this._complete()
     }
   }
 
@@ -229,9 +238,12 @@ class TextBox extends Element {
   }
 
   _scrollCursorIntoView() {
-    const cursorLine = Math.round(this._cursor.offsetTop / this._lineHeight) + 1
-    const numLines = this._element.offsetHeight / this._lineHeight
-    const rems = Math.min(Math.max(0, cursorLine - 2), Math.max(0, numLines - 3))
+    const cursorLine = Math.floor(this._cursor.offsetTop / this._lineHeightPx()) + 1
+    const numLines = this._element.offsetHeight / this._lineHeightPx()
+    const rems = Math.min(
+      Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
+      Math.max(0, numLines - this._windowSize)
+    )
     this.style().transform = `translateY(${-rems*3}rem)`
   }
 
