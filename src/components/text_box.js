@@ -40,6 +40,8 @@ export default class TextBox extends Component {
   _reset(text) {
     this._text = text.trim()
     this._index = 0
+    this._isComplete = false
+    this._parent.style.height = ''
 
     this._render()
     this._resizeHandler()
