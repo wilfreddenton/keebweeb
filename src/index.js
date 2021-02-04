@@ -11,7 +11,7 @@ import {
   listen
 } from './events'
 
-import { Element, Fade, isUndefined } from './utils'
+import { Element, Fade, debounce, getRootFontSize, isUndefined } from './utils'
 
 import { Accuracy, Progress, Select, WPM } from './components'
 
@@ -91,8 +91,7 @@ class TextBox extends Element {
     this._cursor = null
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor.classList.toggle('cursor-hide'), 530]
-    this._fontSize = parseInt(window.getComputedStyle(document.documentElement).fontSize.match(/\d+/)[0])
-    this._lineHeight = this._fontSize * 3
+
     this._setupListeners()
   }
 
@@ -106,8 +105,8 @@ class TextBox extends Element {
     this._text = text.trim()
     this._index = 0
 
-    this.style().transform = 'translateY(0rem)'
     this._render()
+    this._resizeHandler()
     this._focus()
   }
 
@@ -129,6 +128,7 @@ class TextBox extends Element {
   }
 
   _setupListeners() {
+    window.addEventListener('resize', debounce(this._resizeHandler.bind(this), 100))
     document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
       e.stopPropagation()
@@ -142,6 +142,12 @@ class TextBox extends Element {
     listen(EventReset, ({text}) => {
       this._reset(text)
     })
+  }
+
+  _resizeHandler(e) {
+    this._fontSize = getRootFontSize()
+    this._lineHeight = this._fontSize * 3
+    this._scrollCursorIntoView()
   }
 
   _entryHandler(e) {
@@ -220,7 +226,10 @@ class TextBox extends Element {
     h(e.key)
 
     emit(EventProgress, {index: this._index, length: this._ccs.length})
+    this._scrollCursorIntoView()
+  }
 
+  _scrollCursorIntoView() {
     const cursorLine = Math.round(this._cursor.offsetTop / this._lineHeight) + 1
     const numLines = this._element.offsetHeight / this._lineHeight
     const rems = Math.min(Math.max(0, cursorLine - 2), Math.max(0, numLines - 3))
