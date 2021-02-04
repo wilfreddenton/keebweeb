@@ -47,4 +47,8 @@ export default class Component {
     if (child instanceof Component) child = child._element
     this._element.appendChild(child)
   }
+
+  offsetTop() {
+    return this._element.offsetTop
+  }
 }

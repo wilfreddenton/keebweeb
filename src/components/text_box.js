@@ -23,9 +23,10 @@ export default class TextBox extends Component {
     this._ccs = []
     this._cursor = null
     this._cursorInterval = null
-    this._cursorIntervalParams = [() => this._cursor.classList.toggle('cursor-hide'), 530]
+    this._cursorIntervalParams = [() => this._cursor.classList().toggle('cursor-hide'), 530]
     this._lineHeightRem = 3
     this._windowSize = 3
+    this._isComplete = false
 
     this._setupListeners()
   }
@@ -33,7 +34,7 @@ export default class TextBox extends Component {
   _setCursor(cc, after) {
     after = isUndefined(after) ? false : after
     after ? cc.setCursorAfter() : cc.setCursorBefore()
-    this._cursor = cc._element
+    this._cursor = cc
   }
 
   _reset(text) {
@@ -64,6 +65,11 @@ export default class TextBox extends Component {
 
   _complete() {
     this._blur()
+    const parentHeight = this._lineHeightPx() * 3
+    const height = this._element.offsetHeight
+    const targetHeight = Math.max(parentHeight, height)
+    this._parent.style.height = `${targetHeight}px`
+    this.style().transform = `translateY(0rem)`
   }
 
   _lineHeightPx() {
@@ -89,7 +95,11 @@ export default class TextBox extends Component {
 
   _resizeHandler() {
     this._fontSize = getRootFontSize()
-    this._scrollCursorIntoView()
+    if (this._isComplete) {
+      this._complete()
+    } else {
+      this._scrollCursorIntoView()
+    }
   }
 
   _entryHandler(e) {
@@ -134,6 +144,7 @@ export default class TextBox extends Component {
       cc.remove()
       emit(EventEntry, {entryDelta: 0, errorDelta: -1})
     }
+    return false
   }
 
   _characterHandler(c) {
@@ -149,9 +160,10 @@ export default class TextBox extends Component {
     this._index += 1
     if (this._index < this._ccs.length) {
       this._setCursor(this._ccs[this._index])
+      return false
     } else {
       this._setCursor(cc, true)
-      if (cc.isCorrect() && this._index === this._ccs.length) this._complete()
+      if (cc.isCorrect() && this._index === this._ccs.length) return true
     }
   }
 
@@ -164,14 +176,18 @@ export default class TextBox extends Component {
     this._resetCursorInterval()
     emit(EventTypingStart)
 
-    h(e.key)
+    this._isComplete = h(e.key)
 
     emit(EventProgress, {index: this._index, length: this._ccs.length})
-    this._scrollCursorIntoView()
+    if (this._isComplete) {
+      this._complete()
+    } else {
+      this._scrollCursorIntoView()
+    }
   }
 
   _scrollCursorIntoView() {
-    const cursorLine = Math.floor(this._cursor.offsetTop / this._lineHeightPx()) + 1
+    const cursorLine = Math.floor(this._cursor.offsetTop() / this._lineHeightPx()) + 1
     const numLines = this._element.offsetHeight / this._lineHeightPx()
     const rems = Math.min(
       Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
@@ -185,7 +201,7 @@ export default class TextBox extends Component {
   }
 
   _resetCursorInterval() {
-    this._cursor.classList.remove('cursor-hide')
+    this._cursor.classList().remove('cursor-hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
@@ -198,7 +214,7 @@ export default class TextBox extends Component {
   _blur() {
     this.classList().remove('focused')
     clearInterval(this._cursorInterval)
-    this._cursor.classList.add('cursor-hide')
+    this._cursor.classList().add('cursor-hide')
     emit(EventTypingStop)
   }
 }
