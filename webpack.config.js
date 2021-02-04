@@ -1,4 +1,5 @@
 const path = require('path')
+const EsLintPlugin = require('eslint-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
@@ -18,6 +19,7 @@ module.exports = {
     contentBase: './dist'
   },
   plugins: [
+    new EsLintPlugin(),
     new HtmlWebpackPlugin({
       template: './src/index.html'
     })

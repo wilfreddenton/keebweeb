@@ -1,4 +1,4 @@
-import { Fade } from '../utils.js'
+import Fade from './fade'
 
 export default class Select extends Fade {
   constructor(element, labels, defaultIndex, prefix) {

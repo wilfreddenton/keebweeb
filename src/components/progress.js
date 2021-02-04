@@ -1,5 +1,10 @@
-import { Fade } from '../utils'
-import { EventProgress, EventReset, listen } from '../events'
+import {
+  EventProgress,
+  EventReset,
+  listen
+} from '../events'
+
+import Fade from './fade'
 
 export default class Progress extends Fade {
   constructor(element) {

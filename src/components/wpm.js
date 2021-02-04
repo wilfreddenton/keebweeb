@@ -1,5 +1,10 @@
-import { Fade } from '../utils'
-import { EventEntry, EventReset, listen } from '../events'
+import {
+  EventEntry,
+  EventReset,
+  listen
+} from '../events'
+
+import Fade from './fade'
 
 export default class WPM extends Fade {
   constructor(element, intervalMS) {
