@@ -196,7 +196,6 @@ class TextBox extends Element {
 
   _characterHandler(c) {
     const cc = this._ccs[this._index]
-    console.log(cc)
     if (cc.setEntry(c)) {
       emit(EventEntry, {entryDelta: 1, errorDelta: 0})
     } else {
