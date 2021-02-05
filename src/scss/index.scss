@@ -56,7 +56,7 @@
 
 html {
   box-sizing: border-box;
-  font-size: 100%;
+  font-size: 60%;
 }
 
 *, *:before, *:after {
@@ -96,8 +96,8 @@ body {
   background: none;
   width: 100%;
   font-family: 'recursive', monospace;
-  font-variation-settings: 'MONO' 1;
   font-size: 1.5rem;
+  font-variation-settings: 'MONO' 1;
   user-select: none;
   height: 9rem;
   transition: height 300ms;
@@ -129,9 +129,9 @@ body {
 
 #container {
   position: relative;
-  margin: 1rem auto;
-  max-width: 875px;
-  padding: 1rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  max-width: 53rem;
 }
 
 select {
@@ -168,4 +168,16 @@ select {
 
 .fade.typing {
   opacity: 0.33
+}
+
+@media (min-width: 30rem) {
+  html {
+    font-size: 80%;
+  }
+}
+
+@media (min-width: 53rem) {
+  html {
+    font-size: 100%
+  }
 }

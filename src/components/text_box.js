@@ -191,10 +191,10 @@ export default class TextBox extends Component {
   _scrollCursorIntoView() {
     const cursorLine = Math.floor(this._cursor.offsetTop() / this._lineHeightPx()) + 1
     const numLines = this._element.offsetHeight / this._lineHeightPx()
-    const rems = Math.min(
+    const rems = Math.floor(Math.min(
       Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
       Math.max(0, numLines - this._windowSize)
-    )
+    ))
     this.style().transform = `translateY(${-rems*3}rem)`
   }
 
