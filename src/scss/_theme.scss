@@ -10,11 +10,11 @@
     background-color: $background-color;
 
     .cc.cursor {
-      box-shadow: inset 2px 0px 0px 0px $cursor-color;
+      box-shadow: inset 10.2rem 0rem 0rem -10rem $cursor-color;
     }
 
     .cc.cursor.cursor-after {
-      box-shadow: inset -2px 0px 0px 0px $cursor-color;
+      box-shadow: inset -10.2rem 0rem 0rem -10rem $cursor-color;
     }
 
     .cc.cursor.cursor-hide {
