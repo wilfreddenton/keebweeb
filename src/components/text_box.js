@@ -67,10 +67,10 @@ export default class TextBox extends Component {
 
   _complete() {
     this._blur()
-    const parentHeight = this._lineHeightPx() * 3
-    const height = this._element.offsetHeight
+    const parentHeight = this._lineHeightRem * 3
+    const height = this._lineHeightRem * this._numLines()
     const targetHeight = Math.max(parentHeight, height)
-    this._parent.style.height = `${targetHeight}px`
+    this._parent.style.height = `${targetHeight}rem`
     this.style().transform = `translateY(0rem)`
   }
 
@@ -188,12 +188,15 @@ export default class TextBox extends Component {
     }
   }
 
+  _numLines() {
+    return this._element.offsetHeight / this._lineHeightPx()
+  }
+
   _scrollCursorIntoView() {
     const cursorLine = Math.floor(this._cursor.offsetTop() / this._lineHeightPx()) + 1
-    const numLines = this._element.offsetHeight / this._lineHeightPx()
     const rems = Math.floor(Math.min(
       Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
-      Math.max(0, numLines - this._windowSize)
+      Math.max(0, this._numLines() - this._windowSize)
     ))
     this.style().transform = `translateY(${-rems*3}rem)`
   }

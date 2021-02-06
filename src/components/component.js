@@ -1,6 +1,13 @@
 export default class Component {
   constructor(element) {
     this._element = element
+    this.state = {}
+    this.stateChangeHandlers = []
+  }
+
+  setState(delta) {
+    this.state = {...this.state, ...delta}
+    this.stateChangeHandlers.forEach(h => h())
   }
 
   getInnerHTML() {

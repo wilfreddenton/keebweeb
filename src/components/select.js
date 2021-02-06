@@ -4,12 +4,31 @@ export default class Select extends Fade {
   constructor(element, labels, defaultIndex, prefix) {
     super(element)
 
-    this._options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
     this._prefix = prefix
-    this._defaultIndex = defaultIndex
+
+    this.state = {selected: this._getSelected()}
+    this.stateChangeHandlers = [this._updateSelected]
+
+    const options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
+    if (this.state.selected === null) {
+      this.setState({selected: options[defaultIndex].value})
+    }
 
     this._setupListeners()
-    this._render()
+    this._render(options)
+    this._updateSelected()
+  }
+
+  _setupListeners() {
+    this.addEventListener('change', e => {
+      this.setState({selected: e.target.value})
+    })
+  }
+
+  _render(options) {
+    this.setInnerHTML(options.reduce((html, {label, value}) => {
+      return `${html}<option value="${value}">${label}</option>\n`
+    }, ''))
   }
 
   _getSelected() {
@@ -20,28 +39,11 @@ export default class Select extends Fade {
     window.localStorage.setItem(`${this._prefix}--selected`, selected)
   }
 
-  _setupListeners() {
-    this.addEventListener('change', e => {
-      this._updateSelected(e.target.value)
-    })
-  }
-
-  _updateSelected(selected) {
-    const currentSelection = this._getSelected()
-    if (currentSelection !== null) {
-      document.body.classList.remove(currentSelection)
-    }
-
-    this._setSelected(selected)
+  _updateSelected = () => {
+    const {selected} = this.state
+    document.body.classList = ""
     document.body.classList.add(selected)
+    this._setSelected(selected)
     this.setValue(selected)
-  }
-
-  _render() {
-    this.setInnerHTML(this._options.reduce((html, {label, value}) => {
-      return `${html}<option value="${value}">${label}</option>\n`
-    }, ''))
-
-    this._updateSelected(this._getSelected() === null ? this._options[this._defaultIndex].value : this._getSelected())
   }
 }

@@ -26,7 +26,7 @@ function main() {
     `If there are gods and they are just, then they will not care how devout you have been, but will welcome you based on the virtues you have lived by.`
   ]
 
-  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 5, 'theme')
+  new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 4, 'theme')
   new WPM(document.getElementById('wpm'))
   new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
