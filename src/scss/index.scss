@@ -69,30 +69,10 @@ body {
   font-family: 'recursive', sans-serif;
 }
 
-#cursor {
-  position: absolute;
-  width: 0px;
-  top: 0px;
-  left: 0px;
-  z-index: 100;
-}
-
-#cursor.hide {
-  opacity: 0
-}
-
-#cursor > span {
-  position: absolute;
-  left: 0px;
-  top: 10px;
-  height: 29px;
-  width: 4px;
-}
-
 #text-box {
   display: block;
   position: relative;
-  margin: 50px auto;
+  margin: 3rem auto;
   background: none;
   width: 100%;
   font-family: 'recursive', monospace;
@@ -124,7 +104,8 @@ body {
 .stat {
   font-family: 'recursive';
   font-size: 1.2rem;
-  height: 50px;
+  line-height: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 #container {

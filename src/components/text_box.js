@@ -193,7 +193,7 @@ export default class TextBox extends Component {
   }
 
   _numLines() {
-    return this._element.offsetHeight / this._lineHeightPx()
+    return Math.floor(this._element.offsetHeight / this._lineHeightPx())
   }
 
   _scrollCursorIntoView() {
