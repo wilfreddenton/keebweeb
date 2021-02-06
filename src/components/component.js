@@ -6,8 +6,9 @@ export default class Component {
   }
 
   setState(delta) {
-    this.state = {...this.state, ...delta}
-    this.stateChangeHandlers.forEach(h => h())
+    const prevState = { ...this.state }
+    this.state = { ...prevState, ...delta }
+    this.stateChangeHandlers.forEach(h => h(prevState))
   }
 
   getInnerHTML() {

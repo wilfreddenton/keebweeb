@@ -4,9 +4,10 @@ export default class Select extends Fade {
   constructor(element, labels, defaultIndex, prefix) {
     super(element)
 
-    this._prefix = prefix
-
-    this.state = {selected: this._getSelected()}
+    this.state = {
+      prefix: prefix,
+      selected: this._getSelected()
+    }
     this.stateChangeHandlers = [this._updateSelected]
 
     const options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
@@ -32,15 +33,15 @@ export default class Select extends Fade {
   }
 
   _getSelected() {
-    return localStorage.getItem(`${this._prefix}--selected`)
+    return localStorage.getItem(`${this.state.prefix}--selected`)
   }
 
   _setSelected(selected) {
-    window.localStorage.setItem(`${this._prefix}--selected`, selected)
+    window.localStorage.setItem(`${this.state.prefix}--selected`, selected)
   }
 
   _updateSelected = () => {
-    const {selected} = this.state
+    const { selected } = this.state
     document.body.classList = ""
     document.body.classList.add(selected)
     this._setSelected(selected)

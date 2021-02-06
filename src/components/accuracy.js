@@ -10,32 +10,32 @@ export default class Accuracy extends Fade {
   constructor(element) {
     super(element)
 
+    this.stateChangeHandlers = [this._render]
     this._reset()
     this._setupListeners()
   }
 
   _setupListeners() {
-    listen(EventEntry, ({entryDelta, errorDelta}) => {
-      this._numEntries += entryDelta
-      this._numErrors += errorDelta > -1 ? errorDelta : 0
-      this._render()
+    listen(EventEntry, ({ entryDelta, errorDelta }) => {
+      this.setState({
+        numEntries: this.state.numEntries + entryDelta,
+        numErrors: this.state.numErrors + Math.max(0, errorDelta)
+      })
     })
     listen(EventReset, this._reset.bind(this))
   }
 
   _reset() {
-    this._numEntries = 0
-    this._numErrors = 0
-
-    this._render()
+    this.setState({
+      numEntries: 0,
+      numErrors: 0
+    })
   }
 
-  _render() {
-    this.setInnerHTML(`Accuracy: ${Math.floor(this.accuracy() * 100)}%`)
-  }
-
-  accuracy() {
-    if (this._numEntries === 0) return 1
-    return (this._numEntries - this._numErrors) / this._numEntries
+  _render = () => {
+    const accuracy = this.state.numEntries === 0
+      ? 1
+      : (this.state.numEntries - this.state.numErrors) / this.state.numEntries
+    this.setInnerHTML(`Accuracy: ${Math.floor(accuracy * 100)}%`)
   }
 }
