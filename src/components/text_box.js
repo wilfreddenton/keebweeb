@@ -158,7 +158,7 @@ export default class TextBox extends Component {
     if (cc.setEntry(c)) {
       emit(EventEntry, {entryDelta: 1, errorDelta: 0})
     } else {
-      const errorCC = new CC(c, cc, false)
+      const errorCC = new CC(c, cc, {isIncorrect: true})
       this._ccs.splice(this._index, 0, errorCC)
       emit(EventEntry, {entryDelta: 1, errorDelta: 1})
     }
@@ -226,4 +226,6 @@ export default class TextBox extends Component {
     this._cursor.classList().add('cursor-hide')
     emit(EventTypingStop)
   }
+
+  render() {}
 }

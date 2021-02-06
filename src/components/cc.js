@@ -3,17 +3,22 @@ import { isUndefined } from '../utils'
 import Component from './component'
 
 export default class CC extends Component { // stands for Controlled Character
-  constructor(c, cc, isCorrect) {
+  static classes = ['cursor', 'cursor-after', 'space', 'correct', 'incorrect']
+  static classToKey = CC.classes.reduce((classToKey, c) => {
+    return {
+      ...classToKey,
+      [c]: c.split('-').map(w => `${w[0].toUpperCase()}${w.slice(1)}`).reduce((k, w) => k + w, 'is')
+    }
+  }, {})
+
+  constructor(c, cc, initialState) {
     const span = document.createElement('span')
-    span.innerHTML = c
+    span.classList.add('cc')
     if (!isUndefined(cc)) {
       cc.insertBefore(span)
     }
-    super(span)
-    this.classList().add('cc')
 
-
-    this.state = {
+    super(span, {
       char: c,
       currentChar: c,
       isCursor: false,
@@ -21,10 +26,8 @@ export default class CC extends Component { // stands for Controlled Character
       isSpace: c === ' ',
       isCorrect: false,
       isIncorrect: false,
-    }
-    this.stateChangeHandlers = [this._render]
-
-    if (!isUndefined(isCorrect)) isCorrect ? this._setCorrect() : this._setIncorrect()
+      ...(!isUndefined(initialState) ? initialState : {})
+    })
   }
 
   _setCorrect() {
@@ -87,17 +90,17 @@ export default class CC extends Component { // stands for Controlled Character
     })
   }
 
-  _render = () => {
-    [ [this.state.isCursor, 'cursor'],
-      [this.state.isCursorAfter, 'cursor-after'],
-      [this.state.isSpace, 'space'],
-      [this.state.isCorrect, 'correct'],
-      [this.state.isIncorrect, 'incorrect']
-    ].forEach(([b, c]) => {
-      if (b) {
-        this.classList().add(c)
-      } else {
-        this.classList().remove(c)
+  render(prevState) {
+    const isInitial = isUndefined(prevState)
+    CC.classes.forEach(c => {
+      const k = CC.classToKey[c]
+      const b = this.state[k]
+      if (isInitial || b !== prevState[k]) {
+        if (b) {
+          this.classList().add(c)
+        } else {
+          this.classList().remove(c)
+        }
       }
     })
 

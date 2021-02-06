@@ -1,23 +1,19 @@
-import Fade from './fade'
+import { isUndefined } from '../utils'
 
-export default class Select extends Fade {
+import Component from './component'
+
+export default class Select extends Component {
   constructor(element, labels, defaultIndex, prefix) {
     super(element)
 
-    this.state = {
-      prefix: prefix,
-      selected: this._getSelected()
-    }
-    this.stateChangeHandlers = [this._updateSelected]
-
     const options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
-    if (this.state.selected === null) {
-      this.setState({selected: options[defaultIndex].value})
+    const selected = localStorage.getItem(`${prefix}--selected`)
+    this.state = {
+      options: options,
+      prefix: prefix,
+      selected: selected === null ? options[defaultIndex].value : selected
     }
-
     this._setupListeners()
-    this._render(options)
-    this._updateSelected()
   }
 
   _setupListeners() {
@@ -26,25 +22,19 @@ export default class Select extends Fade {
     })
   }
 
-  _render(options) {
-    this.setInnerHTML(options.reduce((html, {label, value}) => {
-      return `${html}<option value="${value}">${label}</option>\n`
-    }, ''))
-  }
-
-  _getSelected() {
-    return localStorage.getItem(`${this.state.prefix}--selected`)
-  }
-
-  _setSelected(selected) {
-    window.localStorage.setItem(`${this.state.prefix}--selected`, selected)
-  }
-
-  _updateSelected = () => {
+  render(prevState) {
     const { selected } = this.state
     document.body.classList = ""
     document.body.classList.add(selected)
-    this._setSelected(selected)
+
+    if (isUndefined(prevState)) {
+      this.setInnerHTML(this.state.options.reduce((html, {label, value}) => {
+        return `${html}<option value="${value}">${label}</option>\n`
+      }, ''))
+    } else {
+      localStorage.setItem(`${this.state.prefix}--selected`, selected)
+    }
+    
     this.setValue(selected)
   }
 }

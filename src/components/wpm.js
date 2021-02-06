@@ -6,14 +6,18 @@ import {
 
 import { isUndefined } from '../utils'
 
-import Fade from './fade'
+import Component from './component'
 
-export default class WPM extends Fade {
+export default class WPM extends Component {
+  static initialState = {
+    numEntries: 0,
+    numErrors: 0,
+    timeStart: null,
+    time: null
+  }
+
   constructor(element) {
-    super(element)
-
-    this.stateChangeHandlers = [this._render]
-    this._reset()
+    super(element, WPM.initialState)
     this._setupListeners()
   }
 
@@ -27,26 +31,15 @@ export default class WPM extends Fade {
         time: time
       })
     })
-    listen(EventReset, this._reset.bind(this))
-  }
-
-  _reset() {
-    this.setState({
-      numEntries: 0,
-      numErrors: 0,
-      timeStart: null,
-      time: null
+    listen(EventReset, () => {
+      this.setState(WPM.initialState)
     })
   }
 
-  _render = (prevState) => {
+  render(prevState) {
     let rawWPM = 0
     let netWPM = 0
-    if ([
-      !isUndefined(prevState.time),
-      this.state.time !== null,
-      prevState.time !== null
-    ].every(b => b)) {
+    if (!isUndefined(prevState) && this.state.time !== null && prevState.time !== null) {
       const timeBetween = this.state.time - prevState.time
       rawWPM = Math.round(((60 * 1000) / timeBetween) / 5)
       const numMins = (this.state.time - this.state.timeStart) / (1000 * 60)

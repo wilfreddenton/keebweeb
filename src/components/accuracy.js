@@ -4,14 +4,13 @@ import {
   listen
 } from '../events'
 
-import Fade from './fade'
+import Component from './component'
 
-export default class Accuracy extends Fade {
+export default class Accuracy extends Component {
+  static initialState = { numEntries: 0, numErrors: 0 }
+
   constructor(element) {
-    super(element)
-
-    this.stateChangeHandlers = [this._render]
-    this._reset()
+    super(element, Accuracy.initialState)
     this._setupListeners()
   }
 
@@ -22,17 +21,12 @@ export default class Accuracy extends Fade {
         numErrors: this.state.numErrors + Math.max(0, errorDelta)
       })
     })
-    listen(EventReset, this._reset.bind(this))
-  }
-
-  _reset() {
-    this.setState({
-      numEntries: 0,
-      numErrors: 0
+    listen(EventReset, () => {
+      this.setState(Accuracy.initialState)
     })
   }
 
-  _render = () => {
+  render() {
     const accuracy = this.state.numEntries === 0
       ? 1
       : (this.state.numEntries - this.state.numErrors) / this.state.numEntries

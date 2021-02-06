@@ -1,15 +1,19 @@
 export default class Component {
-  constructor(element) {
+  constructor(element, state) {
     this._element = element
-    this.state = {}
-    this.stateChangeHandlers = []
+    this.state = {...state}
+    setTimeout(() => {
+      this.render()
+    })
   }
 
   setState(delta) {
     const prevState = { ...this.state }
     this.state = { ...prevState, ...delta }
-    this.stateChangeHandlers.forEach(h => h(prevState))
+    this.render(prevState)
   }
+
+  render() {}
 
   getInnerHTML() {
     return this._element.innerHTML
