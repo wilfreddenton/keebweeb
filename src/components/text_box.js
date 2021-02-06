@@ -34,6 +34,10 @@ export default class TextBox extends Component {
   _setCursor(cc, after) {
     after = isUndefined(after) ? false : after
     after ? cc.setCursorAfter() : cc.setCursorBefore()
+    const prevIndex = this._index - 1
+    const nextIndex = this._index + 1
+    if (prevIndex > -1) this._ccs[prevIndex].unsetCursor()
+    if (nextIndex < this._ccs.length) this._ccs[nextIndex].unsetCursor()
     this._cursor = cc
   }
 

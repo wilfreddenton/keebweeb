@@ -12,58 +12,95 @@ export default class CC extends Component { // stands for Controlled Character
     super(span)
     this.classList().add('cc')
 
-    this._char = c
 
-    if (!isUndefined(isCorrect)) {
-      isCorrect ? this._setCorrect() : this._setIncorrect()
+    this.state = {
+      char: c,
+      currentChar: c,
+      isCursor: false,
+      isCursorAfter: false,
+      isSpace: c === ' ',
+      isCorrect: false,
+      isIncorrect: false,
     }
+    this.stateChangeHandlers = [this._render]
 
-    if (this._char === ' ') this.classList().add('space')
+    if (!isUndefined(isCorrect)) isCorrect ? this._setCorrect() : this._setIncorrect()
   }
 
   _setCorrect() {
-    this.classList().remove('incorrect')
-    this.classList().add('correct')
+    this.setState({
+      isCorrect: true,
+      isIncorrect: false
+    })
   }
 
   _setIncorrect() {
-    this.classList().remove('correct')
-    this.classList().add('incorrect')
+    this.setState({
+      isCorrect: false,
+      isIncorrect: true
+    })
   }
 
   setChar(c) {
-    this._char = c
+    this.setState({
+      char: c,
+      currentChar: c
+    })
     this.revert()
   }
 
   revert() {
-    this.classList().remove('space', 'correct', 'incorrect')
-    this.setInnerHTML(this._char)
+    this.setState({
+      isSpace: false,
+      isCorrect: false, 
+      isIncorrect: false
+    })
   }
 
   setEntry(c) {
-    const correct = this._char === c
+    const correct = this.state.char === c
     if (correct) this._setCorrect()
     return correct
   }
 
   isCorrect() {
-    return this.classList().contains('correct')
+    return this.state.isCorrect
   }
 
   currentChar() {
-    return this.getInnerHTML()
+    return this.state.currentChar
   }
 
   setCursorBefore() {
-    this.adjacentSiblings().forEach(e => {
-      if (e !== null) e.classList.remove('cursor', 'cursor-hide', 'cursor-after')
-    })
-    this.classList().add('cursor')
+    this.setState({ isCursor: true })
   }
 
   setCursorAfter() {
     this.setCursorBefore()
-    this.classList().add('cursor-after')
+    this.setState({ isCursorAfter: true })
+  }
+
+  unsetCursor() {
+    this.setState({
+      isCursor: false,
+      isCursorAfter: false
+    })
+  }
+
+  _render = () => {
+    [ [this.state.isCursor, 'cursor'],
+      [this.state.isCursorAfter, 'cursor-after'],
+      [this.state.isSpace, 'space'],
+      [this.state.isCorrect, 'correct'],
+      [this.state.isIncorrect, 'incorrect']
+    ].forEach(([b, c]) => {
+      if (b) {
+        this.classList().add(c)
+      } else {
+        this.classList().remove(c)
+      }
+    })
+
+    this.setInnerHTML(this.state.currentChar)
   }
 }
