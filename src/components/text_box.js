@@ -12,9 +12,9 @@ import {
 import { debounce, getRootFontSize, isUndefined } from '../utils'
 
 import CC from './cc'
-import Component from './component'
+import { LinkedList } from './linked_list'
 
-export default class TextBox extends Component {
+export default class TextBox extends LinkedList {
   constructor(element) {
     super(document.createElement('div'), {
       parentHeight: null,
@@ -24,12 +24,12 @@ export default class TextBox extends Component {
     this._parent = element
     this._parent.appendChild(this._element)
     this._text = ""
-    this._ccs = []
+    this._index = 0
     this._cursor = null
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor.classList().toggle('cursor-hide'), 530]
     this._lineHeightRem = 3
-    this._windowSize = 3
+    this._textBoxSize = 3
     this._fontSize = getRootFontSize()
 
     this._setupListeners()
@@ -38,10 +38,8 @@ export default class TextBox extends Component {
   _setCursor(cc, after) {
     after = isUndefined(after) ? false : after
     after ? cc.setCursorAfter() : cc.setCursorBefore()
-    const prevIndex = this._index - 1
-    const nextIndex = this._index + 1
-    if (prevIndex > -1) this._ccs[prevIndex].unsetCursor()
-    if (nextIndex < this._ccs.length) this._ccs[nextIndex].unsetCursor()
+    if (cc.prev() !== null) cc.prev().unsetCursor()
+    if (cc.next() !== null) cc.next().unsetCursor()
     this._cursor = cc
   }
 
@@ -58,25 +56,26 @@ export default class TextBox extends Component {
   }
 
   _render() {
-    this._ccs.splice(this._text.length).forEach(cc => cc.remove())
-
+    let node = this.head()
     for (let i = 0; i < this._text.length; i += 1) {
       const c = this._text[i]
-      if (i < this._ccs.length) {
-        this._ccs[i].setChar(c)
-      } else {
+      if (node === null) {
         const cc = new CC(c)
-        this.appendChild(cc)
-        this._ccs.push(cc)
+        this.push(cc)
+        node = null
+      } else {
+        node.setChar(c)
+        node = node.next()
       }
     }
+    this.chop(node)
 
-    this._setCursor(this._ccs[0])
+    this._setCursor(this.head())
   }
 
   _complete() {
     this._blur()
-    const parentHeight = this._lineHeightRem * this._windowSize
+    const parentHeight = this._lineHeightRem * this._textBoxSize
     const height = this._lineHeightRem * this._numLines()
     this.setState({
       parentHeight: Math.max(parentHeight, height),
@@ -145,45 +144,42 @@ export default class TextBox extends Component {
   }
 
   _backspaceHandler() {
-    if (this._index < 1) return
-    this._index -= 1
-    const cc = this._ccs[this._index]
+    if (this._cursor === this.head()) return
+    const cc = this._cursor.prev()
     if (cc.isCorrect()) {
+      this._index -= 1
       cc.revert()
       this._setCursor(cc)
     } else {
-      this._ccs.splice(this._index, 1)
-      cc.remove()
+      this.removeNode(cc)
       emit(EventEntry, {entryDelta: 0, errorDelta: -1})
     }
     return false
   }
 
   _characterHandler(c) {
-    const cc = this._ccs[this._index]
+    const cc = this._cursor
     if (cc.setEntry(c)) {
+      this._index += 1
       emit(EventEntry, {entryDelta: 1, errorDelta: 0})
+      if (cc === this.tail()) {
+        this._setCursor(cc, true)
+        return true
+      } else {
+        this._setCursor(cc.next())
+        return false
+      }
     } else {
       const errorCC = new CC(c, {isIncorrect: true})
-      cc.insertBefore(errorCC)
-      this._ccs.splice(this._index, 0, errorCC)
+      this.insertNodeBefore(cc, errorCC)
       emit(EventEntry, {entryDelta: 1, errorDelta: 1})
-    }
-
-    if (this._index < this._ccs.length - 1) {
-      this._index += 1
-      this._setCursor(this._ccs[this._index])
       return false
-    } else {
-      this._setCursor(cc, true)
-      this._index += 1
-      return true
     }
   }
 
   _input(e, h) {
     if (!this._isFocused()) return
-    if (this._index >= this._ccs.length) return
+    if (this._index === this._text.length) return
     e.preventDefault()
     e.stopPropagation()
 
@@ -197,7 +193,7 @@ export default class TextBox extends Component {
       this._scrollCursorIntoView()
     }
 
-    emit(EventProgress, {index: this._index, length: this._ccs.length})
+    emit(EventProgress, {index: this._index, length: this._text.length})
   }
 
   _numLines() {
@@ -207,8 +203,8 @@ export default class TextBox extends Component {
   _scrollCursorIntoView() {
     const cursorLine = Math.floor(this._cursor.offsetTop() / this._lineHeightPx()) + 1
     const shift = Math.floor(Math.min(
-      Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
-      Math.max(0, this._numLines() - this._windowSize)
+      Math.max(0, cursorLine - (Math.floor(this._textBoxSize / 2) + 1)),
+      Math.max(0, this._numLines() - this._textBoxSize)
     ))
     this.setState({
       shift

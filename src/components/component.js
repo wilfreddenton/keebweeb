@@ -60,9 +60,9 @@ export default class Component {
     return [this._element.previousSibling, this._element.nextSibling]
   }
 
-  appendChild(child) {
-    if (child instanceof Component) child = child._element
-    this._element.appendChild(child)
+  appendChild(element) {
+    if (element instanceof Component) element = element._element
+    this._element.appendChild(element)
   }
 
   offsetTop() {

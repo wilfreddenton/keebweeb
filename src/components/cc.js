@@ -1,8 +1,8 @@
 import { isUndefined } from '../utils'
 
-import Component from './component'
+import { LinkedListNode } from './linked_list'
 
-export default class CC extends Component { // stands for Controlled Character
+export default class CC extends LinkedListNode { // stands for Controlled Character
   static classes = ['cursor', 'cursor-after', 'cursor-hide', 'space', 'correct', 'incorrect']
   static classToKey = CC.classes.reduce((classToKey, c) => {
     return {
@@ -108,7 +108,6 @@ export default class CC extends Component { // stands for Controlled Character
       const k = CC.classToKey[c]
       const b = this.state[k]
       if (isInitial || b !== prevState[k]) {
-        console.log(this.state.char, k, b)
         if (b) {
           this.classList().add(c)
         } else {
