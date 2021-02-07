@@ -16,7 +16,11 @@ import Component from './component'
 
 export default class TextBox extends Component {
   constructor(element) {
-    super(document.createElement('div'))
+    super(document.createElement('div'), {
+      parentHeight: null,
+      shift: 0,
+      isFocused: false
+    })
     this._parent = element
     this._parent.appendChild(this._element)
     this._text = ""
@@ -26,7 +30,7 @@ export default class TextBox extends Component {
     this._cursorIntervalParams = [() => this._cursor.classList().toggle('cursor-hide'), 530]
     this._lineHeightRem = 3
     this._windowSize = 3
-    this._isComplete = false
+    this._fontSize = getRootFontSize()
 
     this._setupListeners()
   }
@@ -44,11 +48,12 @@ export default class TextBox extends Component {
   _reset(text) {
     this._text = text.trim()
     this._index = 0
-    this._isComplete = false
-    this._parent.style.height = ''
+    this.setState({
+      parentHeight: null,
+      shift: 0
+    })
 
     this._render()
-    this._resizeHandler()
     this._focus()
   }
 
@@ -71,11 +76,12 @@ export default class TextBox extends Component {
 
   _complete() {
     this._blur()
-    const parentHeight = this._lineHeightRem * 3
+    const parentHeight = this._lineHeightRem * this._windowSize
     const height = this._lineHeightRem * this._numLines()
-    const targetHeight = Math.max(parentHeight, height)
-    this._parent.style.height = `${targetHeight}rem`
-    this.style().transform = `translateY(0rem)`
+    this.setState({
+      parentHeight: Math.max(parentHeight, height),
+      shift: 0
+    })
   }
 
   _lineHeightPx() {
@@ -101,7 +107,7 @@ export default class TextBox extends Component {
 
   _resizeHandler() {
     this._fontSize = getRootFontSize()
-    if (this._isComplete) {
+    if (this.state.parentHeight !== null) {
       this._complete()
     } else {
       this._scrollCursorIntoView()
@@ -158,18 +164,20 @@ export default class TextBox extends Component {
     if (cc.setEntry(c)) {
       emit(EventEntry, {entryDelta: 1, errorDelta: 0})
     } else {
-      const errorCC = new CC(c, cc, {isIncorrect: true})
+      const errorCC = new CC(c, {isIncorrect: true})
+      cc.insertBefore(errorCC)
       this._ccs.splice(this._index, 0, errorCC)
       emit(EventEntry, {entryDelta: 1, errorDelta: 1})
     }
 
-    this._index += 1
-    if (this._index < this._ccs.length) {
+    if (this._index < this._ccs.length - 1) {
+      this._index += 1
       this._setCursor(this._ccs[this._index])
       return false
     } else {
       this._setCursor(cc, true)
-      if (cc.isCorrect() && this._index === this._ccs.length) return true
+      this._index += 1
+      return true
     }
   }
 
@@ -182,14 +190,14 @@ export default class TextBox extends Component {
     this._resetCursorInterval()
     emit(EventTypingStart)
 
-    this._isComplete = h(e.key)
-
-    emit(EventProgress, {index: this._index, length: this._ccs.length})
-    if (this._isComplete) {
+    const isComplete = h(e.key)
+    if (isComplete) {
       this._complete()
     } else {
       this._scrollCursorIntoView()
     }
+
+    emit(EventProgress, {index: this._index, length: this._ccs.length})
   }
 
   _numLines() {
@@ -198,34 +206,55 @@ export default class TextBox extends Component {
 
   _scrollCursorIntoView() {
     const cursorLine = Math.floor(this._cursor.offsetTop() / this._lineHeightPx()) + 1
-    const rems = Math.floor(Math.min(
+    const shift = Math.floor(Math.min(
       Math.max(0, cursorLine - (Math.floor(this._windowSize / 2) + 1)),
       Math.max(0, this._numLines() - this._windowSize)
     ))
-    this.style().transform = `translateY(${-rems*3}rem)`
+    this.setState({
+      shift
+    })
   }
 
   _isFocused() {
-    return this.classList().contains('focused')
+    return this.state.isFocused
   }
 
   _resetCursorInterval() {
-    this._cursor.classList().remove('cursor-hide')
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
   }
 
   _focus() {
-    if (!this._isFocused()) this.classList().add('focused')
+    this.setState({isFocused: true})
     this._resetCursorInterval()
   }
 
   _blur() {
-    this.classList().remove('focused')
+    this.setState({isFocused: false})
     clearInterval(this._cursorInterval)
-    this._cursor.classList().add('cursor-hide')
     emit(EventTypingStop)
   }
 
-  render() {}
+  render(prevState) {
+    const isInitial = isUndefined(prevState)
+    if (!isInitial && prevState.isFocused !== this.state.isFocused) {
+      if (this.state.isFocused) {
+        this._cursor.show()
+      } else {
+        this._cursor.hide()
+      }
+    }
+
+    if (!isInitial && prevState.parentHeight !== this.state.parentHeight) {
+      if (this.state.parentHeight === null) {
+        this._parent.style.height = ''
+      } else {
+        this._parent.style.height = `${this.state.parentHeight}rem`
+      }
+    }
+
+    if (!isInitial && prevState.shift !== this.state.shift) {
+      this.style().transform = `translateY(${-this.state.shift*this._lineHeightRem}rem)`
+    }
+  }
 }

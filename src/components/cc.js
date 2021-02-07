@@ -3,7 +3,7 @@ import { isUndefined } from '../utils'
 import Component from './component'
 
 export default class CC extends Component { // stands for Controlled Character
-  static classes = ['cursor', 'cursor-after', 'space', 'correct', 'incorrect']
+  static classes = ['cursor', 'cursor-after', 'cursor-hide', 'space', 'correct', 'incorrect']
   static classToKey = CC.classes.reduce((classToKey, c) => {
     return {
       ...classToKey,
@@ -11,18 +11,16 @@ export default class CC extends Component { // stands for Controlled Character
     }
   }, {})
 
-  constructor(c, cc, initialState) {
+  constructor(c, initialState) {
     const span = document.createElement('span')
     span.classList.add('cc')
-    if (!isUndefined(cc)) {
-      cc.insertBefore(span)
-    }
 
     super(span, {
       char: c,
       currentChar: c,
       isCursor: false,
       isCursorAfter: false,
+      isCursorHide: false,
       isSpace: c === ' ',
       isCorrect: false,
       isIncorrect: false,
@@ -79,8 +77,22 @@ export default class CC extends Component { // stands for Controlled Character
   }
 
   setCursorAfter() {
-    this.setCursorBefore()
-    this.setState({ isCursorAfter: true })
+    this.setState({
+      isCursor: true,
+      isCursorAfter: true
+    })
+  }
+
+  hide() {
+    this.setState({
+      isCursorHide: true
+    })
+  }
+
+  show() {
+    this.setState({
+      isCursorHide: false
+    })
   }
 
   unsetCursor() {
@@ -96,6 +108,7 @@ export default class CC extends Component { // stands for Controlled Character
       const k = CC.classToKey[c]
       const b = this.state[k]
       if (isInitial || b !== prevState[k]) {
+        console.log(this.state.char, k, b)
         if (b) {
           this.classList().add(c)
         } else {
@@ -104,6 +117,8 @@ export default class CC extends Component { // stands for Controlled Character
       }
     })
 
-    this.setInnerHTML(this.state.currentChar)
+    if (isInitial || prevState.currentChar !== this.state.currentChar) {
+      this.setInnerHTML(this.state.currentChar)
+    }
   }
 }

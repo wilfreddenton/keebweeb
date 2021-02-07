@@ -7,10 +7,13 @@ export default class Component {
     })
   }
 
-  setState(delta) {
+  setState(newState) {
     const prevState = { ...this.state }
-    this.state = { ...prevState, ...delta }
-    this.render(prevState)
+    this.state = { ...prevState, ...newState }
+    const delta = Object.entries(newState).reduce((delta, [k, v]) => {
+      return {...delta, ...(v !== prevState[k] ? {k: v} : {})}
+    })
+    this.render(prevState, delta)
   }
 
   render() {}
@@ -40,10 +43,12 @@ export default class Component {
   }
 
   insertBefore(element) {
+    if (element instanceof Component) element = element._element
     this._element.parentNode.insertBefore(element, this._element)
   }
 
   insertAfter(element) {
+    if (element instanceof Component) element = element._element
     this._element.parentNode.insertBefore(element, this._element.nextSibling)
   }
 
