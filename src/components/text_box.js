@@ -27,9 +27,9 @@ export default class TextBox extends LinkedList {
     this._cursor = null
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this._cursor.toggle(), 530]
-    this._lineHeightRem = 3
-    this._textBoxSize = 3
     this._fontSize = getRootFontSize()
+    this._lineHeightRem = Math.floor(parseInt(window.getComputedStyle(this._parent).lineHeight.slice(0, -2)) / this._fontSize)
+    this._textBoxSize = this._numLines(this._parent)
 
     this._setupListeners()
   }
@@ -193,8 +193,8 @@ export default class TextBox extends LinkedList {
 
   }
 
-  _numLines() {
-    return Math.floor(this._element.offsetHeight / this._lineHeightPx())
+  _numLines(element) {
+    return Math.floor((isUndefined(element) ? this._element.offsetHeight : element.offsetHeight) / this._lineHeightPx())
   }
 
   _scrollCursorIntoView() {

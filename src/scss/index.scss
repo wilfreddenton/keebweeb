@@ -80,6 +80,7 @@ body {
   font-variation-settings: 'MONO' 1;
   user-select: none;
   height: 9rem;
+  line-height: 3rem;
   transition: height 300ms;
   overflow-y: hidden;
   overflow-wrap: break-word;
@@ -125,7 +126,6 @@ select {
 .cc {
   position: relative;
   display: inline;
-  line-height: 3rem;
 }
 
 .cc.hide {
