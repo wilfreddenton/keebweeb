@@ -21,7 +21,8 @@ export default class TextBox extends LinkedList {
       shift: 0,
       isFocused: false,
       isComplete: false,
-      cursor: null
+      cursor: null,
+      width: window.innerWidth
     })
     this._parent = element
     this._parent.appendChild(this._element)
@@ -37,7 +38,7 @@ export default class TextBox extends LinkedList {
 
   _reset(text) {
     this._text = text.trim()
-    this._render()
+    this._newLinkedList()
     this.setState({
       parentHeight: null,
       shift: 0,
@@ -47,7 +48,7 @@ export default class TextBox extends LinkedList {
     this._focus()
   }
 
-  _render() {
+  _newLinkedList() {
     let node = this.head()
     for (let i = 0; i < this._text.length; i += 1) {
       const c = this._text[i]
@@ -80,7 +81,7 @@ export default class TextBox extends LinkedList {
   }
 
   _setupListeners() {
-    window.addEventListener('resize', debounce(this._resizeHandler.bind(this), 100))
+    window.addEventListener('resize', debounce(() => this.setState({width: window.innerWidth}), 100))
     document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
       e.stopPropagation()
@@ -94,15 +95,6 @@ export default class TextBox extends LinkedList {
     listen(EventReset, ({text}) => {
       this._reset(text)
     })
-  }
-
-  _resizeHandler() {
-    this._fontSize = getRootFontSize()
-    if (this.state.parentHeight !== null) {
-      this._complete()
-    } else {
-      this._scrollCursorIntoView()
-    }
   }
 
   _entryHandler(e) {
@@ -175,13 +167,6 @@ export default class TextBox extends LinkedList {
     emit(EventTypingStart)
 
     h(e.key)
-
-    if (this.state.isComplete) {
-      this._complete()
-    } else {
-      this._scrollCursorIntoView()
-    }
-
   }
 
   _numLines(element) {
@@ -252,9 +237,20 @@ export default class TextBox extends LinkedList {
       this.state.cursor.setCursorBefore()
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
+      this._scrollCursorIntoView()
     }
     if (!isInitial && !prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
+      this._complete()
+    }
+
+    if (!isInitial && prevState.width !== this.state.width) {
+      this._fontSize = getRootFontSize()
+      if (this.state.isComplete) {
+        this._complete()
+      } else {
+        this._scrollCursorIntoView()
+      }
     }
   }
 }
