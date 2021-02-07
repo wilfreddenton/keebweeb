@@ -28,7 +28,7 @@ function main() {
     `You should enjoy the little detours to the fullest. Because that's where you'll find things more important than what you want.`,
     `Assassination - Its the family trade. We all take it up. My folks see me as an exceptional prospect. But I don't see that I should have to live up to their expectations.`,
     `Normally, as people love and are loved, they feel happiness. When I am hated by people, that is when I feel happiness. And then I want to tear apart and inflict unimaginable harm to the things I love. But is that really all that strange, I wonder?`,
-    `I’ve always gone to any lengths to avoid facing danger and risk, hiding myself within a safe cage, where no one could hurt me. I hated myself for it.. But I couldn’t change myself.. Friends and teachers encouraged me, but I never truly listened, considering it the logic of the strong. Yet somehow… A boy with less than half my strength managed to break my cage!`,
+    `I've always gone to any lengths to avoid facing danger and risk, hiding myself within a safe cage, where no one could hurt me. I hated myself for it.. But I couldn't change myself.. Friends and teachers encouraged me, but I never truly listened, considering it the logic of the strong. Yet somehow... A boy with less than half my strength managed to break my cage!`,
     `It takes a mere second for treasure to turn to trash.`,
     `Right now, I'm letting you live. And I'll continue to keep you alive... until you've grown enough to become worth killing.`,
     `There are liars who only lie when there's a reason to, and there are liars who also lie without a reason.`,
