@@ -95,6 +95,12 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     })
   }
 
+  toggle() {
+    this.setState({
+      isCursorHide: !this.state.isCursorHide
+    })
+  }
+
   unsetCursor() {
     this.setState({
       isCursor: false,

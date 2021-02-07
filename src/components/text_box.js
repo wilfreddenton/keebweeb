@@ -24,10 +24,9 @@ export default class TextBox extends LinkedList {
     this._parent = element
     this._parent.appendChild(this._element)
     this._text = ""
-    this._index = 0
     this._cursor = null
     this._cursorInterval = null
-    this._cursorIntervalParams = [() => this._cursor.classList().toggle('cursor-hide'), 530]
+    this._cursorIntervalParams = [() => this._cursor.toggle(), 530]
     this._lineHeightRem = 3
     this._textBoxSize = 3
     this._fontSize = getRootFontSize()
@@ -45,7 +44,6 @@ export default class TextBox extends LinkedList {
 
   _reset(text) {
     this._text = text.trim()
-    this._index = 0
     this.setState({
       parentHeight: null,
       shift: 0
@@ -61,10 +59,12 @@ export default class TextBox extends LinkedList {
       const c = this._text[i]
       if (node === null) {
         const cc = new CC(c)
+        cc.setIndex(i)
         this.push(cc)
         node = null
       } else {
         node.setChar(c)
+        node.setIndex(i)
         node = node.next()
       }
     }
@@ -147,53 +147,50 @@ export default class TextBox extends LinkedList {
     if (this._cursor === this.head()) return
     const cc = this._cursor.prev()
     if (cc.isCorrect()) {
-      this._index -= 1
       cc.revert()
       this._setCursor(cc)
+      this._emitProgress()
     } else {
       this.removeNode(cc)
       emit(EventEntry, {entryDelta: 0, errorDelta: -1})
     }
-    return false
   }
 
   _characterHandler(c) {
     const cc = this._cursor
     if (cc.setEntry(c)) {
-      this._index += 1
       emit(EventEntry, {entryDelta: 1, errorDelta: 0})
       if (cc === this.tail()) {
         this._setCursor(cc, true)
-        return true
+        this._cursor.setIndex(this._cursor.index() + 1)
       } else {
         this._setCursor(cc.next())
-        return false
       }
+      this._emitProgress()
     } else {
       const errorCC = new CC(c, {isIncorrect: true})
       this.insertNodeBefore(cc, errorCC)
       emit(EventEntry, {entryDelta: 1, errorDelta: 1})
-      return false
     }
   }
 
   _input(e, h) {
     if (!this._isFocused()) return
-    if (this._index === this._text.length) return
+    if (this._isComplete()) return
     e.preventDefault()
     e.stopPropagation()
 
     this._resetCursorInterval()
     emit(EventTypingStart)
 
-    const isComplete = h(e.key)
-    if (isComplete) {
+    h(e.key)
+
+    if (this._isComplete()) {
       this._complete()
     } else {
       this._scrollCursorIntoView()
     }
 
-    emit(EventProgress, {index: this._index, length: this._text.length})
   }
 
   _numLines() {
@@ -229,6 +226,14 @@ export default class TextBox extends LinkedList {
     this.setState({isFocused: false})
     clearInterval(this._cursorInterval)
     emit(EventTypingStop)
+  }
+
+  _isComplete() {
+    return this._cursor === this.tail() && this._cursor.state.isCursorAfter
+  }
+
+  _emitProgress() {
+    emit(EventProgress, {index: this._cursor.index(), length: this._text.length})
   }
 
   render(prevState) {

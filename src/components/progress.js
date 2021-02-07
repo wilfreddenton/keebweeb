@@ -16,6 +16,7 @@ export default class Progress extends Component {
 
   _setupListeners() {
     listen(EventProgress, ({ index, length }) => {
+      console.log(index, length)
       this.setState({progress: Math.floor((index / length) * 100)})
     })
     listen(EventReset, () => {

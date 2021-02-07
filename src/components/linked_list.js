@@ -4,8 +4,17 @@ class LinkedListNode extends Component {
   constructor(element, state) {
     super(element, state)
 
+    this._index = 0
     this._prev = null
     this._next = null
+  }
+
+  index() {
+    return this._index
+  }
+
+  setIndex(index) {
+    this._index = index
   }
 
   next() {
