@@ -13,6 +13,21 @@ import { debounce, getRootFontSize, isUndefined } from '../utils'
 import CC from './cc'
 import { LinkedList } from './linked_list'
 
+class Text {
+  constructor(text) {
+    if (text instanceof Text) text = text._text
+    this._text = text.trim()
+  }
+
+  charAt(i) {
+    return this._text[i]
+  }
+
+  length() {
+    return this._text.length
+  }
+}
+
 export default class TextBox extends LinkedList {
   constructor(element) {
     super(document.createElement('div'), {
@@ -21,37 +36,27 @@ export default class TextBox extends LinkedList {
       isFocused: false,
       isComplete: false,
       cursor: null,
-      width: window.innerWidth
+      width: window.innerWidth,
+      text: null,
+      fontSize: getRootFontSize()
     })
 
     this._parent = element
     this._parent.appendChild(this._element)
-    this._text = ""
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this.state.cursor.toggle(), 530]
     this._fontSize = getRootFontSize()
     this._lineHeightRem = Math.floor(parseInt(window.getComputedStyle(this._parent).lineHeight.slice(0, -2)) / this._fontSize)
+    this._lineHeightPx = this.state.fontSize * this._lineHeightRem
     this._textBoxSize = this._numLines(this._parent)
 
     this._setupListeners()
   }
 
-  _reset(text) {
-    this._text = text.trim()
-    this._newLinkedList()
-    this.setState({
-      parentHeight: null,
-      shift: 0,
-      cursor: this.head(),
-      isComplete: false
-    })
-    this._focus()
-  }
-
   _newLinkedList() {
     let node = this.head()
-    for (let i = 0; i < this._text.length; i += 1) {
-      const c = this._text[i]
+    for (let i = 0; i < this.state.text.length(); i += 1) {
+      const c = this.state.text.charAt(i)
       if (node === null) {
         const cc = new CC(c)
         cc.setIndex(i)
@@ -76,12 +81,11 @@ export default class TextBox extends LinkedList {
     })
   }
 
-  _lineHeightPx() {
-    return this._fontSize * this._lineHeightRem
-  }
-
   _setupListeners() {
-    window.addEventListener('resize', debounce(() => this.setState({width: window.innerWidth}), 100))
+    window.addEventListener('resize', debounce(() => this.setState({
+      width: window.innerWidth,
+      fontSize: getRootFontSize()
+    }), 100))
     document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
       e.stopPropagation()
@@ -92,9 +96,7 @@ export default class TextBox extends LinkedList {
       this._entryHandler(e)
     })
     listen(EventStop, this._blur.bind(this))
-    listen(EventReset, ({text}) => {
-      this._reset(text)
-    })
+    listen(EventReset, ({text}) => this.setState({text: new Text(text)}))
   }
 
   _entryHandler(e) {
@@ -118,7 +120,7 @@ export default class TextBox extends LinkedList {
       }
     case 'r':
       if (!this.state.isFocused) {
-        emit(EventReset, {text: this._text})
+        emit(EventReset, {text: new Text(this.state.text)})
         break
       }
     default:
@@ -167,11 +169,11 @@ export default class TextBox extends LinkedList {
   }
 
   _numLines(element) {
-    return Math.floor((isUndefined(element) ? this._element.offsetHeight : element.offsetHeight) / this._lineHeightPx())
+    return Math.floor((isUndefined(element) ? this._element.offsetHeight : element.offsetHeight) / this._lineHeightPx)
   }
 
   _scrollCursorIntoView() {
-    const cursorLine = Math.floor(this.state.cursor.offsetTop() / this._lineHeightPx()) + 1
+    const cursorLine = Math.floor(this.state.cursor.offsetTop() / this._lineHeightPx) + 1
     const shift = Math.floor(Math.min(
       Math.max(0, cursorLine - (Math.floor(this._textBoxSize / 2) + 1)),
       Math.max(0, this._numLines() - this._textBoxSize)
@@ -197,8 +199,9 @@ export default class TextBox extends LinkedList {
   }
 
   render(prevState) {
-    const isInitial = isUndefined(prevState)
-    if (!isInitial && prevState.isFocused !== this.state.isFocused) {
+    if (isUndefined(prevState)) return
+
+    if (prevState.isFocused !== this.state.isFocused) {
       if (this.state.isFocused) {
         this._resetCursorInterval()
       } else {
@@ -207,7 +210,7 @@ export default class TextBox extends LinkedList {
       }
     }
 
-    if (!isInitial && prevState.parentHeight !== this.state.parentHeight) {
+    if (prevState.parentHeight !== this.state.parentHeight) {
       if (this.state.parentHeight === null) {
         this._parent.style.height = ''
       } else {
@@ -215,30 +218,44 @@ export default class TextBox extends LinkedList {
       }
     }
 
-    if (!isInitial && prevState.shift !== this.state.shift) {
+    if (prevState.shift !== this.state.shift) {
       this.style().transform = `translateY(${-this.state.shift*this._lineHeightRem}rem)`
     }
 
-    if (isInitial || prevState.cursor !== this.state.cursor) {
+    if (prevState.cursor !== this.state.cursor) {
       this.state.cursor.setCursorBefore()
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
       this._scrollCursorIntoView()
-      if (!isInitial) emit(EventProgress, {index: this.state.cursor.index(), length: this._text.length})
+      emit(EventProgress, {index: this.state.cursor.index(), length: this.state.text.length()})
     }
-    if (!isInitial && !prevState.isComplete && this.state.isComplete) {
+    if (!prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
-      emit(EventProgress, {index: this.state.cursor.index() + 1, length: this._text.length})
+      emit(EventProgress, {index: this.state.cursor.index() + 1, length: this.state.text.length()})
       this._complete()
     }
 
-    if (!isInitial && prevState.width !== this.state.width) {
-      this._fontSize = getRootFontSize()
+    if (prevState.fontSize !== this.state.fontSize) {
+      this._lineHeightPx = this.state.fontSize * this._lineHeightRem
+    }
+
+    if (prevState.width !== this.state.width) {
       if (this.state.isComplete) {
         this._complete()
       } else {
         this._scrollCursorIntoView()
       }
+    }
+
+    if (prevState.text !== this.state.text) {
+      this._newLinkedList()
+      this.setState({
+        parentHeight: null,
+        shift: 0,
+        cursor: this.head(),
+        isComplete: false,
+        isFocused: true
+      })
     }
   }
 }

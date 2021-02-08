@@ -45,7 +45,7 @@ function main() {
 
   const getIndex = () => {
     const params = new URLSearchParams(window.location.search)
-    return params.has('index') ? params.get('index') : -1
+    return params.has('index') ? parseInt(params.get('index')) : -1
   }
 
   const goToText = (i) => {
@@ -55,8 +55,8 @@ function main() {
   const resetHandler = () => {
     const j = getIndex()
     let i = j
-    while (i === j) i = randomText()
     if (j < 0) {
+      while (i === j) i = randomText()
       goToText(i)
     }
     emit(EventReset, {text: texts[i]})
