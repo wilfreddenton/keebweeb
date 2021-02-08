@@ -10,10 +10,7 @@ export default class Component {
   setState(newState) {
     const prevState = { ...this.state }
     this.state = { ...prevState, ...newState }
-    const delta = Object.entries(newState).reduce((delta, [k, v]) => {
-      return {...delta, ...(v !== prevState[k] ? {k: v} : {})}
-    })
-    this.render(prevState, delta)
+    this.render(prevState)
   }
 
   render() {}

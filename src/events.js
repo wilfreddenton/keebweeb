@@ -2,7 +2,6 @@ const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
       EventStop = 'keebweeb-stop',
       EventReset = 'keebweeb-reset',
-      EventTypingStart = 'keebweeb-typing-start',
       EventTypingStop = 'keebweeb-typing-stop'
 
 function emit(eventName, data) {
@@ -23,7 +22,6 @@ export {
   EventProgress,
   EventStop,
   EventReset,
-  EventTypingStart,
   EventTypingStop,
 
   emit,

@@ -3,7 +3,6 @@ import {
   EventProgress,
   EventReset,
   EventStop,
-  EventTypingStart,
   EventTypingStop,
   emit,
   listen
@@ -24,6 +23,7 @@ export default class TextBox extends LinkedList {
       cursor: null,
       width: window.innerWidth
     })
+
     this._parent = element
     this._parent.appendChild(this._element)
     this._text = ""
@@ -112,12 +112,12 @@ export default class TextBox extends LinkedList {
       this._input(e, this._backspaceHandler.bind(this))
       break
     case 'n':
-      if (!this._isFocused()) {
+      if (!this.state.isFocused) {
         emit(EventStop, {wait: false})
         break
       }
     case 'r':
-      if (!this._isFocused()) {
+      if (!this.state.isFocused) {
         emit(EventReset, {text: this._text})
         break
       }
@@ -133,38 +133,35 @@ export default class TextBox extends LinkedList {
     if (cc.isCorrect()) {
       cc.revert()
       this.setState({cursor: cc})
-      this._emitProgress()
     } else {
-      this.removeNode(cc)
       emit(EventEntry, {entryDelta: 0, errorDelta: -1})
+      this.removeNode(cc)
     }
   }
 
   _characterHandler(c) {
     const cc = this.state.cursor
     if (cc.setEntry(c)) {
+      emit(EventEntry, {entryDelta: 1, errorDelta: 0})
       if (cc === this.tail()) {
         this.setState({isComplete: true})
       } else {
         this.setState({cursor: cc.next()})
       }
-      this._emitProgress()
-      emit(EventEntry, {entryDelta: 1, errorDelta: 0})
     } else {
+      emit(EventEntry, {entryDelta: 1, errorDelta: 1})
       const errorCC = new CC(c, {isIncorrect: true})
       this.insertNodeBefore(cc, errorCC)
-      emit(EventEntry, {entryDelta: 1, errorDelta: 1})
     }
   }
 
   _input(e, h) {
-    if (!this._isFocused()) return
+    if (!this.state.isFocused) return
     if (this.state.isComplete) return
     e.preventDefault()
     e.stopPropagation()
 
     this._resetCursorInterval()
-    emit(EventTypingStart)
 
     h(e.key)
   }
@@ -184,10 +181,6 @@ export default class TextBox extends LinkedList {
     })
   }
 
-  _isFocused() {
-    return this.state.isFocused
-  }
-
   _resetCursorInterval() {
     clearInterval(this._cursorInterval)
     this._cursorInterval = setInterval(...this._cursorIntervalParams)
@@ -196,27 +189,20 @@ export default class TextBox extends LinkedList {
 
   _focus() {
     this.setState({isFocused: true})
-    this._resetCursorInterval()
   }
 
   _blur() {
     this.setState({isFocused: false})
-    clearInterval(this._cursorInterval)
     emit(EventTypingStop)
-  }
-
-  _emitProgress() {
-    let index = this.state.cursor.index()
-    if (this.state.isComplete) index += 1
-    emit(EventProgress, {index: index, length: this._text.length})
   }
 
   render(prevState) {
     const isInitial = isUndefined(prevState)
     if (!isInitial && prevState.isFocused !== this.state.isFocused) {
       if (this.state.isFocused) {
-        this.state.cursor.show()
+        this._resetCursorInterval()
       } else {
+        clearInterval(this._cursorInterval)
         this.state.cursor.hide()
       }
     }
@@ -238,9 +224,11 @@ export default class TextBox extends LinkedList {
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
       this._scrollCursorIntoView()
+      if (!isInitial) emit(EventProgress, {index: this.state.cursor.index(), length: this._text.length})
     }
     if (!isInitial && !prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
+      emit(EventProgress, {index: this.state.cursor.index() + 1, length: this._text.length})
       this._complete()
     }
 

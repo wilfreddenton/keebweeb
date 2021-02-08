@@ -1,5 +1,5 @@
 import {
-  EventTypingStart,
+  EventEntry,
   EventTypingStop,
   emit,
   listen
@@ -9,7 +9,7 @@ export default class Fade {
   constructor(intervalMS) {
     this._timeout = null
 
-    listen(EventTypingStart, () => {
+    listen(EventEntry, () => {
       clearTimeout(this._timeout)
       document.querySelectorAll('.fade').forEach(e => {
         e.classList.add('typing')
