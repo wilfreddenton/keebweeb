@@ -132,6 +132,10 @@ select {
   opacity: 0;
 }
 
+.cc.space {
+  white-space: pre-wrap;
+}
+
 .cc.space.incorrect {
   border-bottom: 4px solid black;
   white-space: break-spaces;

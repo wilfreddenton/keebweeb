@@ -52,7 +52,6 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
 
   revert() {
     this.setState({
-      isSpace: false,
       isCorrect: false, 
       isIncorrect: false
     })

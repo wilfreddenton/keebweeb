@@ -29,6 +29,8 @@ class Text {
 }
 
 export default class TextBox extends LinkedList {
+  static cursorIntervalMS = 530
+
   constructor(element) {
     super(document.createElement('div'), {
       parentHeight: null,
@@ -44,7 +46,7 @@ export default class TextBox extends LinkedList {
     this._parent = element
     this._parent.appendChild(this._element)
     this._cursorInterval = null
-    this._cursorIntervalParams = [() => this.state.cursor.toggle(), 530]
+    this._cursorIntervalParams = [() => this.state.cursor.toggle(), TextBox.cursorIntervalMS]
     this._fontSize = getRootFontSize()
     this._lineHeightRem = Math.floor(parseInt(window.getComputedStyle(this._parent).lineHeight.slice(0, -2)) / this._fontSize)
     this._lineHeightPx = this.state.fontSize * this._lineHeightRem
@@ -72,13 +74,13 @@ export default class TextBox extends LinkedList {
   }
 
   _complete() {
-    this._blur()
     const parentHeight = this._lineHeightRem * this._textBoxSize
     const height = this._lineHeightRem * this._numLines()
     this.setState({
       parentHeight: Math.max(parentHeight, height),
       shift: 0
     })
+    setTimeout(this._blur.bind(this), TextBox.cursorIntervalMS)
   }
 
   _setupListeners() {

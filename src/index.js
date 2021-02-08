@@ -30,7 +30,7 @@ function main() {
     `It takes a mere second for treasure to turn to trash.`,
     `I was trying to take the easy way out by running away from everything. No matter the pain, I will keep living. So when I die, I'll feel I did the best I could.`,
     `Whenever humans encounter the unknown, they tend to lose perspective.`,
-    `Netero, fourty-six years old, in the dead of winter. Sensing that he had reached his limits of both body and technique, he spent much time in contemplation before he reached an answer--Gratitude.`,
+    `Netero, forty-six years old, in the dead of winter. Sensing that he had reached his limits of both body and technique, he spent much time in contemplation before he reached an answer--Gratitude.`,
     `When Netero came down from the mountains, his fists were faster than sound.`
   ]
 
