@@ -54,17 +54,16 @@ function main() {
 
   const resetHandler = () => {
     const j = getIndex()
-    let i = j
-    if (j < 0) {
-      while (i === j) i = randomText()
-      goToText(i)
-    }
+    const i = j < 0 ? randomText() : j
+    goToText(i)
     emit(EventReset, {text: texts[i]})
   }
   window.onpopstate = resetHandler
 
   listen(EventStop, () => {
-    const i = randomText()
+    const j = getIndex()
+    let i = j
+    while (i === j) i = randomText()
     goToText(i)
     emit(EventReset, {text: texts[i]})
   })
