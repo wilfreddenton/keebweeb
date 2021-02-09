@@ -8,25 +8,18 @@ import {
   listen
 } from '../events'
 
-import { debounce, getRootFontSize, isUndefined } from '../utils'
+import {
+  debounce,
+  getLineHeightRem,
+  getNumLines,
+  getRootFontSize,
+  isUndefined
+} from '../utils'
+
+import Text from '../text'
 
 import CC from './cc'
 import { LinkedList } from './linked_list'
-
-class Text {
-  constructor(text) {
-    if (text instanceof Text) text = text._text
-    this._text = text.trim()
-  }
-
-  charAt(i) {
-    return this._text[i]
-  }
-
-  length() {
-    return this._text.length
-  }
-}
 
 export default class TextBox extends LinkedList {
   static cursorIntervalMS = 530
@@ -39,8 +32,7 @@ export default class TextBox extends LinkedList {
       isComplete: false,
       cursor: null,
       width: window.innerWidth,
-      text: null,
-      fontSize: getRootFontSize()
+      text: null
     })
 
     this._parent = element
@@ -48,45 +40,17 @@ export default class TextBox extends LinkedList {
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this.state.cursor.toggle(), TextBox.cursorIntervalMS]
     this._fontSize = getRootFontSize()
-    this._lineHeightRem = Math.floor(parseInt(window.getComputedStyle(this._parent).lineHeight.slice(0, -2)) / this._fontSize)
-    this._lineHeightPx = this.state.fontSize * this._lineHeightRem
-    this._textBoxSize = this._numLines(this._parent)
+    this._lineHeightRem = getLineHeightRem(this._parent, this._fontSize)
+    this._lineHeightPx = this._fontSize * this._lineHeightRem
+    this._textBoxSize = getNumLines(this._parent, this._lineHeightPx)
+    this._numLines = 0
 
     this._setupListeners()
   }
 
-  _newLinkedList() {
-    let node = this.head()
-    for (let i = 0; i < this.state.text.length(); i += 1) {
-      const c = this.state.text.charAt(i)
-      if (node === null) {
-        const cc = new CC(c)
-        cc.setIndex(i)
-        this.push(cc)
-        node = null
-      } else {
-        node.setChar(c)
-        node.setIndex(i)
-        node = node.next()
-      }
-    }
-    this.chop(node)
-  }
-
-  _complete() {
-    const parentHeight = this._lineHeightRem * this._textBoxSize
-    const height = this._lineHeightRem * this._numLines()
-    this.setState({
-      parentHeight: Math.max(parentHeight, height),
-      shift: 0
-    })
-    setTimeout(this._blur.bind(this), TextBox.cursorIntervalMS)
-  }
-
   _setupListeners() {
     window.addEventListener('resize', debounce(() => this.setState({
-      width: window.innerWidth,
-      fontSize: getRootFontSize()
+      width: window.innerWidth
     }), 100))
     document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
@@ -154,7 +118,7 @@ export default class TextBox extends LinkedList {
       }
     } else {
       emit(EventEntry, {entryDelta: 1, errorDelta: 1})
-      const errorCC = new CC(c, {isIncorrect: true})
+      const errorCC = new CC(c, -1, {isIncorrect: true})
       this.insertNodeBefore(cc, errorCC)
     }
   }
@@ -170,25 +134,20 @@ export default class TextBox extends LinkedList {
     h(e.key)
   }
 
-  _numLines(element) {
-    return Math.floor((isUndefined(element) ? this._element.offsetHeight : element.offsetHeight) / this._lineHeightPx)
-  }
-
-  _scrollCursorIntoView() {
-    const cursorLine = Math.floor(this.state.cursor.offsetTop() / this._lineHeightPx) + 1
-    const shift = Math.floor(Math.min(
-      Math.max(0, cursorLine - (Math.floor(this._textBoxSize / 2) + 1)),
-      Math.max(0, this._numLines() - this._textBoxSize)
-    ))
-    this.setState({
-      shift
-    })
-  }
-
-  _resetCursorInterval() {
-    clearInterval(this._cursorInterval)
-    this._cursorInterval = setInterval(...this._cursorIntervalParams)
-    this.state.cursor.show()
+  _newLinkedList() {
+    let node = this.head()
+    for (let i = 0; i < this.state.text.length(); i += 1) {
+      const c = this.state.text.charAt(i)
+      if (node === null) {
+        const cc = new CC(c, i)
+        this.push(cc)
+        node = null
+      } else {
+        node.setChar(c, i)
+        node = node.next()
+      }
+    }
+    this.chop(node)
   }
 
   _focus() {
@@ -197,7 +156,31 @@ export default class TextBox extends LinkedList {
 
   _blur() {
     this.setState({isFocused: false})
-    emit(EventTypingStop)
+  }
+
+  _complete() {
+    const parentHeight = this._lineHeightRem * this._textBoxSize
+    const height = this._lineHeightRem * this._numLines
+    this.setState({
+      parentHeight: Math.max(parentHeight, height),
+      shift: 0
+    })
+    setTimeout(this._blur.bind(this), TextBox.cursorIntervalMS)
+  }
+
+  _scrollCursorIntoView() {
+    const cursorLine = Math.floor(this.state.cursor.offsetTop() / this._lineHeightPx) + 1
+    const shift = Math.floor(Math.min(
+      Math.max(0, cursorLine - (Math.floor(this._textBoxSize / 2) + 1)),
+      Math.max(0, this._numLines - this._textBoxSize)
+    ))
+    this.setState({ shift })
+  }
+
+  _resetCursorInterval() {
+    clearInterval(this._cursorInterval)
+    this._cursorInterval = setInterval(...this._cursorIntervalParams)
+    this.state.cursor.show()
   }
 
   render(prevState) {
@@ -209,6 +192,7 @@ export default class TextBox extends LinkedList {
       } else {
         clearInterval(this._cursorInterval)
         this.state.cursor.hide()
+        emit(EventTypingStop)
       }
     }
 
@@ -237,11 +221,15 @@ export default class TextBox extends LinkedList {
       this._complete()
     }
 
-    if (prevState.fontSize !== this.state.fontSize) {
-      this._lineHeightPx = this.state.fontSize * this._lineHeightRem
+    if (this.state.cursor !== null && prevState.length !== this.state.length) {
+      this._numLines = getNumLines(this._element, this._lineHeightPx)
+      this._scrollCursorIntoView()
     }
 
     if (prevState.width !== this.state.width) {
+      this._fontSize = getRootFontSize()
+      this._lineHeightPx = this._fontSize * this._lineHeightRem
+      this._numLines = getNumLines(this._element, this._lineHeightPx)
       if (this.state.isComplete) {
         this._complete()
       } else {
@@ -258,6 +246,7 @@ export default class TextBox extends LinkedList {
         isComplete: false,
         isFocused: true
       })
+      this._numLines = getNumLines(this._element, this._lineHeightPx)
     }
   }
 }

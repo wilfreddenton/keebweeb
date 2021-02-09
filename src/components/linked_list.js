@@ -55,10 +55,9 @@ class LinkedListNode extends Component {
 
 class LinkedList extends Component {
   constructor(element, state) {
-    super(element, state)
+    super(element, {...state, length: 0})
     this._head = null
     this._tail = null
-    this._length = 0
   }
 
   head() {
@@ -69,20 +68,18 @@ class LinkedList extends Component {
     return this._tail
   }
 
-  length() {
-    return this._length
-  }
-
   chop(node) {
     if (node === null) return
     this._tail = node._prev
     this._tail._next = null
 
+    let count = 0
     while (node !== null) {
       node.remove()
       node = node._next
-      this._length -= 1
+      count += 1
     }
+    this.setState({length: this.state.length - count})
   }
 
   push(node) {
@@ -94,20 +91,20 @@ class LinkedList extends Component {
       this._tail.insertAfter(node)
       this._tail = node
     }
-    this._length += 1
+    this.setState({length: this.state.length + 1})
   }
 
   removeNode(node) {
     if (this._head === node) this._head = node._next
     if (this._tail === node) this._tail = node._prev
     node.remove()
-    this._length -= 1
+    this.setState({length: this.state.length - 1})
   }
 
   insertNodeBefore(n1, n2) {
     n1.insertBefore(n2)
     if (n1 === this._head) this._head = n2
-    this._length += 1
+    this.setState({length: this.state.length + 1})
   }
 }
 

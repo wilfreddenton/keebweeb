@@ -11,7 +11,7 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     }
   }, {})
 
-  constructor(c, initialState) {
+  constructor(c, index, initialState) {
     const span = document.createElement('span')
     span.classList.add('cc')
 
@@ -26,6 +26,8 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
       isIncorrect: false,
       ...(!isUndefined(initialState) ? initialState : {})
     })
+
+    this.setIndex(index)
   }
 
   _setCorrect() {
