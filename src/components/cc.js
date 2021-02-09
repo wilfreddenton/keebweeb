@@ -28,6 +28,7 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     })
 
     this.setIndex(index)
+    this.render()
   }
 
   _setCorrect() {

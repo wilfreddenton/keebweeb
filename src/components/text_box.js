@@ -254,16 +254,14 @@ export default class TextBox extends LinkedList {
 
     if (prevState.text !== this.state.text) {
       this._newLinkedList()
-      setTimeout(() => {
-        this.setState({
-          parentHeight: null,
-          shift: 0,
-          cursor: this.head(),
-          isComplete: false,
-          isFocused: true
-        })
-        this._numLines = getNumLines(this._element, this._lineHeightPx)
+      this.setState({
+        parentHeight: null,
+        shift: 0,
+        cursor: this.head(),
+        isComplete: false,
+        isFocused: true
       })
+      this._numLines = getNumLines(this._element, this._lineHeightPx)
     }
   }
 }

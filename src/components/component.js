@@ -2,9 +2,7 @@ export default class Component {
   constructor(element, state) {
     this._element = element
     this.state = {...state}
-    setTimeout(() => {
-      this.render()
-    })
+    this.render()
   }
 
   setState(newState) {

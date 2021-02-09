@@ -72,4 +72,4 @@ function main() {
   resetHandler()
 }
 
-main()
+window.onload = main
