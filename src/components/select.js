@@ -4,15 +4,15 @@ import Component from './component'
 
 export default class Select extends Component {
   constructor(element, labels, defaultIndex, prefix) {
-    super(element)
-
     const options = labels.map(t => ({label: t, value: `${prefix}--${t.toLowerCase().replace(' ', '-')}`}))
     const selected = localStorage.getItem(`${prefix}--selected`)
-    this.state = {
+
+    super(element, {
       options: options,
       prefix: prefix,
       selected: selected === null ? options[defaultIndex].value : selected
-    }
+    })
+    
     this._setupListeners()
   }
 
@@ -24,8 +24,6 @@ export default class Select extends Component {
 
   render(prevState) {
     const { selected } = this.state
-    document.body.classList = ""
-    document.body.classList.add(selected)
 
     if (isUndefined(prevState)) {
       this.setInnerHTML(this.state.options.reduce((html, {label, value}) => {
@@ -34,7 +32,9 @@ export default class Select extends Component {
     } else {
       localStorage.setItem(`${this.state.prefix}--selected`, selected)
     }
-    
+
+    document.body.classList = ""
+    document.body.classList.add(selected)
     this.setValue(selected)
   }
 }

@@ -11,6 +11,9 @@ export default class Accuracy extends Component {
 
   constructor(element) {
     super(element, Accuracy.initialState)
+
+    this._accuracy = 100
+
     this._setupListeners()
   }
 
@@ -27,9 +30,9 @@ export default class Accuracy extends Component {
   }
 
   render() {
-    const accuracy = this.state.numEntries === 0
+    this._accuracy = this.state.numEntries === 0
       ? 1
       : (this.state.numEntries - this.state.numErrors) / this.state.numEntries
-    this.setInnerHTML(`Accuracy: ${Math.floor(accuracy * 100)}%`)
+    this.setInnerHTML(`Accuracy: ${Math.floor(this._accuracy * 100)}%`)
   }
 }

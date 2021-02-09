@@ -7,23 +7,25 @@ import {
 import Component from './component'
 
 export default class Progress extends Component {
-  static initialState = {progress: 0}
+  static initialState = {index: 0, length: 0}
 
   constructor(element) {
     super(element, Progress.initialState)
+
+    this._progress = 0
+
     this._setupListeners()
   }
 
   _setupListeners() {
-    listen(EventProgress, ({ index, length }) => {
-      this.setState({progress: Math.floor((index / length) * 100)})
-    })
-    listen(EventReset, () => {
-      this.setState(Progress.initialState)
+    listen(EventProgress, ({index}) => this.setState({index}))
+    listen(EventReset, ({text}) => {
+      this.setState({index: 0, length: text.length()})
     })
   }
 
   render() {
-    this.setInnerHTML(`Progress: ${this.state.progress}%`)
+    this._progress = Math.floor((this.state.index / this.state.length) * 100)
+    this.setInnerHTML(`Progress: ${this._progress}%`)
   }
 }

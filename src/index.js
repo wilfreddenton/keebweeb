@@ -16,6 +16,7 @@ import {
 } from './components'
 
 import Fade from './fade'
+import Text from './text'
 
 function main() {
   const texts = [
@@ -32,7 +33,7 @@ function main() {
     `Whenever humans encounter the unknown, they tend to lose perspective.`,
     `Netero, forty-six years old, in the dead of winter. Sensing that he had reached his limits of both body and technique, he spent much time in contemplation before he reached an answer--Gratitude.`,
     `When Netero came down from the mountains, his fists were faster than sound.`
-  ]
+  ].map(t => new Text(t))
 
   new Fade(2000)
   new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 4, 'theme')

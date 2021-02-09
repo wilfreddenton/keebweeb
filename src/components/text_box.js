@@ -21,6 +21,21 @@ import Text from '../text'
 import CC from './cc'
 import { LinkedList } from './linked_list'
 
+function emitEventEntry(entryType) {
+  const time = new Date().getTime()
+  switch(entryType) {
+    case 'correct':
+      emit(EventEntry, {entryDelta: 1, errorDelta: 0, time})
+      break
+    case 'incorrect':
+      emit(EventEntry, {entryDelta: 1, errorDelta: 1, time})
+      break
+    case 'fix':
+      emit(EventEntry, {entryDelta: 0, errorDelta: -1, time})
+      break
+  }
+}
+
 export default class TextBox extends LinkedList {
   static cursorIntervalMS = 530
 
@@ -62,36 +77,36 @@ export default class TextBox extends LinkedList {
       this._entryHandler(e)
     })
     listen(EventStop, this._blur.bind(this))
-    listen(EventReset, ({text}) => this.setState({text: new Text(text)}))
+    listen(EventReset, ({text}) => this.setState({text}))
   }
 
   _entryHandler(e) {
     switch(e.key) {
-    case 'Tab':
-      e.preventDefault()
-      break
-    case 'Escape':
-      this._blur()
-      break
-    case 'Enter':
-      this._focus()
-      break
-    case 'Backspace':
-      this._input(e, this._backspaceHandler.bind(this))
-      break
-    case 'n':
-      if (!this.state.isFocused) {
-        emit(EventStop, {wait: false})
+      case 'Tab':
+        e.preventDefault()
         break
-      }
-    case 'r':
-      if (!this.state.isFocused) {
-        emit(EventReset, {text: new Text(this.state.text)})
+      case 'Escape':
+        this._blur()
         break
-      }
-    default:
-      if (!/^.$/.test(e.key)) break
-      this._input(e, this._characterHandler.bind(this))
+      case 'Enter':
+        this._focus()
+        break
+      case 'Backspace':
+        this._input(e, this._backspaceHandler.bind(this))
+        break
+      case 'n':
+        if (!this.state.isFocused) {
+          emit(EventStop, {wait: false})
+          break
+        }
+      case 'r':
+        if (!this.state.isFocused) {
+          emit(EventReset, {text: new Text(this.state.text)})
+          break
+        }
+      default:
+        if (!/^.$/.test(e.key)) break
+        this._input(e, this._characterHandler.bind(this))
     }
   }
 
@@ -102,7 +117,7 @@ export default class TextBox extends LinkedList {
       cc.revert()
       this.setState({cursor: cc})
     } else {
-      emit(EventEntry, {entryDelta: 0, errorDelta: -1})
+      emitEventEntry('fix')
       this.removeNode(cc)
     }
   }
@@ -110,14 +125,14 @@ export default class TextBox extends LinkedList {
   _characterHandler(c) {
     const cc = this.state.cursor
     if (cc.setEntry(c)) {
-      emit(EventEntry, {entryDelta: 1, errorDelta: 0})
+      emitEventEntry('correct')
       if (cc === this.tail()) {
         this.setState({isComplete: true})
       } else {
         this.setState({cursor: cc.next()})
       }
     } else {
-      emit(EventEntry, {entryDelta: 1, errorDelta: 1})
+      emitEventEntry('incorrect')
       const errorCC = new CC(c, -1, {isIncorrect: true})
       this.insertNodeBefore(cc, errorCC)
     }
@@ -158,7 +173,7 @@ export default class TextBox extends LinkedList {
     this.setState({isFocused: false})
   }
 
-  _complete() {
+  _showFullText() {
     const parentHeight = this._lineHeightRem * this._textBoxSize
     const height = this._lineHeightRem * this._numLines
     this.setState({
@@ -213,12 +228,12 @@ export default class TextBox extends LinkedList {
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
       this._scrollCursorIntoView()
-      emit(EventProgress, {index: this.state.cursor.index(), length: this.state.text.length()})
+      emit(EventProgress, {index: this.state.cursor.index()})
     }
     if (!prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
-      emit(EventProgress, {index: this.state.cursor.index() + 1, length: this.state.text.length()})
-      this._complete()
+      emit(EventProgress, {index: this.state.cursor.index() + 1})
+      this._showFullText()
     }
 
     if (this.state.cursor !== null && prevState.length !== this.state.length) {
@@ -231,7 +246,7 @@ export default class TextBox extends LinkedList {
       this._lineHeightPx = this._fontSize * this._lineHeightRem
       this._numLines = getNumLines(this._element, this._lineHeightPx)
       if (this.state.isComplete) {
-        this._complete()
+        this._showFullText()
       } else {
         this._scrollCursorIntoView()
       }
