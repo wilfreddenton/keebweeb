@@ -34,6 +34,7 @@ export default class WPM extends Component {
       })
     })
     listen(EventReset, () => {
+      this._timeStart = null
       this.setState(WPM.initialState)
     })
   }

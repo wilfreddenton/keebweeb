@@ -66,6 +66,10 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     return correct
   }
 
+  isSpace() {
+    return this.state.isSpace
+  }
+
   isCorrect() {
     return this.state.isCorrect
   }

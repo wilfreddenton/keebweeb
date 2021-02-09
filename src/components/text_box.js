@@ -227,8 +227,8 @@ export default class TextBox extends LinkedList {
       this.state.cursor.setCursorBefore()
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
-      this._scrollCursorIntoView()
       emit(EventProgress, {index: this.state.cursor.index()})
+      if (prevState.cursor !== null && prevState.cursor.isSpace()) this._scrollCursorIntoView()
     }
     if (!prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
@@ -254,14 +254,16 @@ export default class TextBox extends LinkedList {
 
     if (prevState.text !== this.state.text) {
       this._newLinkedList()
-      this.setState({
-        parentHeight: null,
-        shift: 0,
-        cursor: this.head(),
-        isComplete: false,
-        isFocused: true
+      setTimeout(() => {
+        this.setState({
+          parentHeight: null,
+          shift: 0,
+          cursor: this.head(),
+          isComplete: false,
+          isFocused: true
+        })
+        this._numLines = getNumLines(this._element, this._lineHeightPx)
       })
-      this._numLines = getNumLines(this._element, this._lineHeightPx)
     }
   }
 }
