@@ -44,11 +44,12 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     })
   }
 
-  setChar(c) {
+  setChar(c, i) {
     this.setState({
       char: c,
       currentChar: c
     })
+    this.setIndex(i)
     this.revert()
   }
 
@@ -111,6 +112,7 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
 
   render(prevState) {
     const isInitial = isUndefined(prevState)
+
     CC.classes.forEach(c => {
       const k = CC.classToKey[c]
       const b = this.state[k]
