@@ -1,3 +1,5 @@
+import { isUndefined } from './utils'
+
 const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
       EventStop = 'keebweeb-stop',
@@ -6,7 +8,7 @@ const EventEntry = 'keebweeb-entry',
 
 function emit(eventName, data) {
   document.dispatchEvent(
-    typeof data === 'undefined'
+    isUndefined(data)
       ? new Event(eventName)
       : new CustomEvent(eventName, {detail: data}))
 }
@@ -14,7 +16,7 @@ function emit(eventName, data) {
 function listen(eventName, handler) {
   document.addEventListener(
     eventName,
-    e => typeof e.detail === 'undefined' ? handler(): handler(e.detail))
+    e => isUndefined(e.detail) ? handler(): handler(e.detail))
 }
 
 export {

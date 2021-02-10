@@ -40,15 +40,12 @@ export default class WPM extends Component {
   }
 
   render(prevState) {
-    let rawWPM = 0
     let netWPM = 0
     if (!isUndefined(prevState) && this.state.time !== null && prevState.time !== null) {
-      const timeBetween = this.state.time - prevState.time
-      rawWPM = Math.round(((60 * 1000) / timeBetween) / 5)
       const numMins = (this.state.time - this._timeStart) / (1000 * 60)
       const grossWPM = Math.round((this.state.numEntries / 5) / numMins)
       netWPM = Math.max(0, Math.round(grossWPM - this.state.numErrors / numMins))
     }
-    this.setInnerHTML(`${Math.round(netWPM)} WPM (raw: ${rawWPM})`)
+    this.setInnerHTML(`WPM: ${Math.round(netWPM)}`)
   }
 }

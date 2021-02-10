@@ -31,7 +31,7 @@ function emitEventEntry(entryType) {
       emit(EventEntry, {entryDelta: 1, errorDelta: 1, time})
       break
     case 'fix':
-      emit(EventEntry, {entryDelta: 0, errorDelta: -1, time})
+      emit(EventEntry, {entryDelta: -1, errorDelta: -1, time})
       break
   }
 }

@@ -20,6 +20,7 @@ export default class Progress extends Component {
   _setupListeners() {
     listen(EventProgress, ({index}) => this.setState({index}))
     listen(EventReset, ({text}) => {
+      this._progress = 0
       this.setState({index: 0, length: text.length()})
     })
   }

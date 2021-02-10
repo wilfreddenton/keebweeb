@@ -23,17 +23,18 @@ export default class Select extends Component {
   }
 
   render(prevState) {
+    const isInitial = isUndefined(prevState)
     const { selected } = this.state
 
-    if (isUndefined(prevState)) {
+    if (isInitial) {
       this.setInnerHTML(this.state.options.reduce((html, {label, value}) => {
         return `${html}<option value="${value}">${label}</option>\n`
       }, ''))
     } else {
       localStorage.setItem(`${this.state.prefix}--selected`, selected)
+      document.body.classList.remove(prevState.selected)
     }
 
-    document.body.classList = ""
     document.body.classList.add(selected)
     this.setValue(selected)
   }
