@@ -19,6 +19,15 @@
 );
 
 @include theme.new(
+  $name: 'bliss',
+  $background-color: #4e5156,
+  $text-color: #f7f2ea,
+  $cursor-color: #f5d1c8,
+  $error-color: #ea4221,
+  $accent-color: #f5d1c8,
+);
+
+@include theme.new(
   $name: 'cyberspace',
   $background-color: #222822,
   $text-color: #987AD4,
