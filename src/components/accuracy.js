@@ -20,7 +20,7 @@ export default class Accuracy extends Component {
   _setupListeners() {
     listen(EventEntry, ({ entryDelta, errorDelta }) => {
       this.setState({
-        numEntries: this.state.numEntries + entryDelta,
+        numEntries: this.state.numEntries + Math.max(0, entryDelta),
         numErrors: this.state.numErrors + Math.max(0, errorDelta)
       })
     })

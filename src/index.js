@@ -26,7 +26,9 @@ function main() {
     `I was trying to take the easy way out by running away from everything. No matter the pain, I will keep living. So when I die, I'll feel I did the best I could.`,
     `Whenever humans encounter the unknown, they tend to lose perspective.`,
     `Sensing he had reached his limits of both body and technique, he spent much time contemplating before he reached an answer--Gratitude.`,
-    `When Netero came down from the mountains, his fists were faster than sound.`
+    `When Netero came down from the mountains, his fists were faster than sound.`,
+    `There is no way to train your heart to be invulnerable.`,
+    `Words bend our thinking to infinite paths of self-delusion, and the fact that we spend most of our mental lives in brain mansions built of words means that we lack the objectivity necessary to see the terrible distortion of reality which language brings.`
   ].map(t => new Text(t))
 
   new Fade(2000)
