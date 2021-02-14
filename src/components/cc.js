@@ -74,6 +74,10 @@ export default class CC extends LinkedListNode { // stands for Controlled Charac
     return this.state.isCorrect
   }
 
+  isIncorrect() {
+    return this.state.isIncorrect
+  }
+
   currentChar() {
     return this.state.currentChar
   }

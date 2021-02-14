@@ -1,8 +1,9 @@
 import {
+  EventComplete,
   EventEntry,
   EventProgress,
   EventReset,
-  EventStop,
+  EventNext,
   EventTypingStop,
   emit,
   listen
@@ -10,6 +11,7 @@ import {
 
 import {
   debounce,
+  EntryType,
   getLineHeightRem,
   getNumLines,
   getRootFontSize,
@@ -18,23 +20,10 @@ import {
 
 import Text from '../text'
 
+import Accuracy from './accuracy'
 import CC from './cc'
+import WPM from './wpm'
 import { LinkedList } from './linked_list'
-
-function emitEventEntry(entryType) {
-  const time = new Date().getTime()
-  switch(entryType) {
-    case 'correct':
-      emit(EventEntry, {entryDelta: 1, errorDelta: 0, time})
-      break
-    case 'incorrect':
-      emit(EventEntry, {entryDelta: 1, errorDelta: 1, time})
-      break
-    case 'fix':
-      emit(EventEntry, {entryDelta: -1, errorDelta: -1, time})
-      break
-  }
-}
 
 export default class TextBox extends LinkedList {
   static cursorIntervalMS = 530
@@ -58,6 +47,9 @@ export default class TextBox extends LinkedList {
     this._lineHeightRem = getLineHeightRem(this._parent, this._fontSize)
     this._lineHeightPx = this._fontSize * this._lineHeightRem
     this._textBoxSize = getNumLines(this._parent, this._lineHeightPx)
+    this._accuracy = new Accuracy(document.getElementById('accuracy'))
+    this._wpm = new WPM(document.getElementById('wpm'))
+
     this._numLines = 0
 
     this._setupListeners()
@@ -76,7 +68,7 @@ export default class TextBox extends LinkedList {
       if ([e.altKey, e.ctrlKey, e.metaKey].some(b => b)) return
       this._entryHandler(e)
     })
-    listen(EventStop, this._blur.bind(this))
+    listen(EventNext, this._blur.bind(this))
     listen(EventReset, ({text}) => this.setState({text}))
   }
 
@@ -96,7 +88,7 @@ export default class TextBox extends LinkedList {
         break
       case 'n':
         if (!this.state.isFocused) {
-          emit(EventStop, {wait: false})
+          emit(EventNext)
           break
         }
       case 'r':
@@ -115,9 +107,10 @@ export default class TextBox extends LinkedList {
     const cc = this.state.cursor.prev()
     if (cc.isCorrect()) {
       cc.revert()
+      this._entry(EntryType.revert)
       this.setState({cursor: cc})
     } else {
-      emitEventEntry('fix')
+      this._entry(EntryType.fix)
       this.removeNode(cc)
     }
   }
@@ -125,15 +118,15 @@ export default class TextBox extends LinkedList {
   _characterHandler(c) {
     const cc = this.state.cursor
     if (cc.setEntry(c)) {
-      emitEventEntry('correct')
+      this._entry(EntryType.correct)
       if (cc === this.tail()) {
         this.setState({isComplete: true})
       } else {
         this.setState({cursor: cc.next()})
       }
     } else {
-      emitEventEntry('incorrect')
-      const errorCC = new CC(c, -1, {isIncorrect: true})
+      this._entry(EntryType.incorrect)
+      const errorCC = new CC(c, cc.index(), {isIncorrect: true})
       this.insertNodeBefore(cc, errorCC)
     }
   }
@@ -198,6 +191,13 @@ export default class TextBox extends LinkedList {
     this.state.cursor.show()
   }
 
+  _entry(type) {
+    const time = new Date().getTime()
+    const accuracy = this._accuracy.entry(type, time)
+    const wpm = this._wpm.entry(type, time)
+    emit(EventEntry, {type, time, wpm, accuracy})
+  }
+
   render(prevState) {
     if (isUndefined(prevState)) return
 
@@ -234,6 +234,10 @@ export default class TextBox extends LinkedList {
       this.state.cursor.setCursorAfter()
       emit(EventProgress, {index: this.state.cursor.index() + 1})
       this._showFullText()
+      const endState = this.reduce((endState, cc) => {
+        return {...endState, ...(cc.isIncorrect() ? {[cc.index()]: [...(isUndefined(endState[cc.index()]) ? [] : endState[cc.index()]), cc.currentChar()]} : {})}
+      }, {})
+      emit(EventComplete, {endState})
     }
 
     if (this.state.cursor !== null && prevState.length !== this.state.length) {
@@ -261,6 +265,8 @@ export default class TextBox extends LinkedList {
         isComplete: false,
         isFocused: true
       })
+      this._accuracy.reset()
+      this._wpm.reset()
       this._numLines = getNumLines(this._element, this._lineHeightPx)
     }
   }

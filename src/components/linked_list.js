@@ -106,6 +106,16 @@ class LinkedList extends Component {
     if (n1 === this._head) this._head = n2
     this.setState({length: this.state.length + 1})
   }
+
+  reduce(f, acc) {
+    let node = this._head
+    while (node !== null) {
+      acc = f(acc, node)
+      node = node.next()
+    }
+
+    return acc
+  }
 }
 
 export { LinkedList, LinkedListNode }

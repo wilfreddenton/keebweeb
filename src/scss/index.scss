@@ -164,6 +164,14 @@ select {
   opacity: 0.33
 }
 
+.row {
+  display: flex;
+}
+
+.col {
+  flex-grow: 1;
+}
+
 @media (min-width: 30rem) {
   html {
     font-size: 80%;

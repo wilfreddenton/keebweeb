@@ -1,18 +1,17 @@
 import './scss/index.scss'
 
 import {
-  EventStop,
+  EventComplete,
+  EventNext,
   EventReset,
   emit,
   listen
 } from './events'
 
 import {
-  Accuracy,
   Progress,
   Select,
   TextBox,
-  WPM
 } from './components'
 
 import Fade from './fade'
@@ -33,8 +32,6 @@ function main() {
 
   new Fade(2000)
   new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Bliss', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 5, 'theme')
-  new WPM(document.getElementById('wpm'))
-  new Accuracy(document.getElementById('accuracy'))
   new Progress(document.getElementById('progress'))
   new TextBox(document.getElementById('text-box'))
 
@@ -57,13 +54,24 @@ function main() {
   }
   window.onpopstate = resetHandler
 
-  listen(EventStop, () => {
+  listen(EventNext, () => {
     const j = getIndex()
     let i = j
     while (i === j) i = randomText()
     goToText(i)
     emit(EventReset, {text: texts[i]})
   })
+
+  listen(EventComplete, ({endState}) => {
+    console.log(endState)
+  })
+
+  // WPM at entry
+  // time of entry
+  // character entered
+  // isCorrect/isIncorrect (show character if incorrect)
+  // was entry fixed
+  // needs to show backspaces
 
   resetHandler()
 }

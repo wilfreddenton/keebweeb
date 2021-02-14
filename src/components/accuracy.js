@@ -1,38 +1,41 @@
-import {
-  EventEntry,
-  EventReset,
-  listen
-} from '../events'
+import { EntryType, isUndefined } from '../utils'
 
 import Component from './component'
 
 export default class Accuracy extends Component {
-  static initialState = { numEntries: 0, numErrors: 0 }
+  static initialState = { accuracy: 100 }
 
   constructor(element) {
     super(element, Accuracy.initialState)
 
-    this._accuracy = 100
-
-    this._setupListeners()
+    this._numEntries = 0
+    this._numErrors = 0
   }
 
-  _setupListeners() {
-    listen(EventEntry, ({ entryDelta, errorDelta }) => {
-      this.setState({
-        numEntries: this.state.numEntries + Math.max(0, entryDelta),
-        numErrors: this.state.numErrors + Math.max(0, errorDelta)
-      })
-    })
-    listen(EventReset, () => {
-      this.setState(Accuracy.initialState)
-    })
+  entry(entryType) {
+    switch (entryType) {
+      case EntryType.correct:
+        this._numEntries += 1
+        break
+      case EntryType.incorrect:
+        this._numErrors += 1
+        break
+    }
+
+    const accuracy = Math.floor(((this._numEntries - this._numErrors) / this._numEntries) * 100)
+    this.setState({accuracy})
+    return accuracy
   }
 
-  render() {
-    this._accuracy = this.state.numEntries === 0
-      ? 1
-      : (this.state.numEntries - this.state.numErrors) / this.state.numEntries
-    this.setInnerHTML(`Accuracy: ${Math.floor(this._accuracy * 100)}%`)
+  reset() {
+    this._numEntries = 0
+    this._numErrors = 0
+    this.setState(Accuracy.initialState)
+  }
+
+  render(prevState) {
+    if (isUndefined(prevState) || prevState.accuracy !== this.state.accuracy) {
+      this.setInnerHTML(`Accuracy: ${this.state.accuracy}%`)
+    }
   }
 }

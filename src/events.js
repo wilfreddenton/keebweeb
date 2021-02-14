@@ -2,9 +2,11 @@ import { isUndefined } from './utils'
 
 const EventEntry = 'keebweeb-entry',
       EventProgress = 'keepweeb-progress',
-      EventStop = 'keebweeb-stop',
+      EventNext = 'keebweeb-next',
       EventReset = 'keebweeb-reset',
-      EventTypingStop = 'keebweeb-typing-stop'
+      EventTypingStop = 'keebweeb-typing-stop',
+      EventComplete = 'keebweeb-complete'
+
 
 function emit(eventName, data) {
   document.dispatchEvent(
@@ -20,9 +22,10 @@ function listen(eventName, handler) {
 }
 
 export {
+  EventComplete,
   EventEntry,
   EventProgress,
-  EventStop,
+  EventNext,
   EventReset,
   EventTypingStop,
 

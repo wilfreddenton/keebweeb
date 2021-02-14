@@ -24,4 +24,11 @@ function getNumLines(element, lineHeightPx) {
   return Math.floor(element.offsetHeight / lineHeightPx)
 }
 
-export { debounce, getLineHeightRem, getNumLines, getRootFontSize, isUndefined }
+const EntryType = Object.freeze({
+  'correct': 1,
+  'incorrect': 2,
+  'fix': 3,
+  'revert': 4
+})
+
+export { debounce, EntryType, getLineHeightRem, getNumLines, getRootFontSize, isUndefined }

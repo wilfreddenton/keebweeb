@@ -1,51 +1,55 @@
-import {
-  EventEntry,
-  EventReset,
-  listen
-} from '../events'
-
-import { isUndefined } from '../utils'
+import { EntryType, isUndefined } from '../utils'
 
 import Component from './component'
 
 export default class WPM extends Component {
-  static initialState = {
-    numEntries: 0,
-    numErrors: 0,
-    time: null
-  }
+  static initialState = {wpm: 0}
 
   constructor(element) {
     super(element, WPM.initialState)
 
     this._timeStart = null
-
-    this._setupListeners()
+    this._numEntries = 0
+    this._numErrors = 0
   }
 
-  _setupListeners() {
-    listen(EventEntry, ({entryDelta, errorDelta, time}) => {
-      if (this._timeStart === null) this._timeStart = time
+  entry(entryType, time) {
+    switch (entryType) {
+      case EntryType.correct:
+        this._numEntries += 1
+        break
+      case EntryType.incorrect:
+        this._numEntries += 1
+        this._numErrors += 1
+        break
+      case EntryType.fix:
+        this._numEntries -= 1
+        this._numErrors -= 1
+        break
+    }
 
-      this.setState({
-        numEntries: this.state.numEntries + entryDelta,
-        numErrors: this.state.numErrors + errorDelta,
-        time: time
-      })
-    })
-    listen(EventReset, () => {
-      this._timeStart = null
-      this.setState(WPM.initialState)
-    })
+    let wpm = 0
+    if (this._timeStart === null) {
+      this._timeStart = time
+    } else {
+      const numMins = (time - this._timeStart) / (1000 * 60)
+      const grossWPM = Math.round((this._numEntries / 5) / numMins)
+      wpm = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
+    }
+    this.setState({wpm})
+    return wpm
+  }
+
+  reset() {
+    this._timeStart = null
+    this._numEntries = 0
+    this._numErrors = 0
+    this.setState(WPM.initialState)
   }
 
   render(prevState) {
-    let netWPM = 0
-    if (!isUndefined(prevState) && this.state.time !== null && prevState.time !== null) {
-      const numMins = (this.state.time - this._timeStart) / (1000 * 60)
-      const grossWPM = Math.round((this.state.numEntries / 5) / numMins)
-      netWPM = Math.max(0, Math.round(grossWPM - this.state.numErrors / numMins))
+    if (isUndefined(prevState) || prevState.wpm !== this.state.wpm) {
+      this.setInnerHTML(`WPM: ${Math.round(this.state.wpm)}`)
     }
-    this.setInnerHTML(`WPM: ${Math.round(netWPM)}`)
   }
 }
