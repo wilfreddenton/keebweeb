@@ -1,7 +1,10 @@
 export default class Component {
-  constructor(element, state) {
+  constructor(element, state, initialRefs) {
     this._element = element
     this.state = {...state}
+    this._initialRefs = initialRefs
+    Object.assign(this, this._initialRefs)
+
     this.render()
   }
 
@@ -9,6 +12,10 @@ export default class Component {
     const prevState = { ...this.state }
     this.state = { ...prevState, ...newState }
     this.render(prevState)
+  }
+
+  reset() {
+    Object.assign(this, this._initialRefs)
   }
 
   render() {}

@@ -6,10 +6,10 @@ export default class Accuracy extends Component {
   static initialState = { accuracy: 100 }
 
   constructor(element) {
-    super(element, Accuracy.initialState)
-
-    this._numEntries = 0
-    this._numErrors = 0
+    super(element, Accuracy.initialState, {
+      _numEntries: 0,
+      _numErrors: 0
+    })
   }
 
   entry(entryType) {
@@ -28,8 +28,6 @@ export default class Accuracy extends Component {
   }
 
   reset() {
-    this._numEntries = 0
-    this._numErrors = 0
     this.setState(Accuracy.initialState)
   }
 
