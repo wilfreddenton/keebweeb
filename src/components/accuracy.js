@@ -22,12 +22,15 @@ export default class Accuracy extends Component {
         break
     }
 
-    const accuracy = Math.floor(((this._numEntries - this._numErrors) / this._numEntries) * 100)
+    const accuracy = this._numEntries > 0
+      ? Math.max(0, Math.floor(((this._numEntries - this._numErrors) / this._numEntries) * 100))
+      : 0
     this.setState({accuracy})
     return accuracy
   }
 
   reset() {
+    super.reset()
     this.setState(Accuracy.initialState)
   }
 
