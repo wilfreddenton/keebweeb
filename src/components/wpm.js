@@ -54,7 +54,6 @@ export default class WPM extends Component {
       }
 
       const numMins = (time - this._timeStart) / toMins
-      console.log(numMins, this._numEntries)
       const grossWPM = Math.round(((this._numEntries - 1) / 5) / numMins)
       wpm = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
     }

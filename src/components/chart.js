@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, scaleLinear, create, line, max, curveMonotoneX } from 'd3'
+import { axisBottom, axisLeft, scaleLinear, create, line, min, max, curveMonotoneX } from 'd3'
 
 import { EventEntry, EventReset, listen } from '../events'
 
@@ -35,12 +35,12 @@ export default class Chart extends Component {
       bottom: 30,
       left: 30
     })
-    const data = this.state.data
+    const data = this.state.data.filter(({time}) => time > 1)
     const x = scaleLinear()
-      .domain([0, Math.ceil(max(data, ({time}) => time))])
+      .domain([1, Math.ceil(max(data, ({time}) => time))])
       .range([0, 800 - margin.right - margin.left])
     const y = scaleLinear()
-      .domain([0, max(data, ({wpm}) => wpm) + 10])
+      .domain([Math.max(0, min(data, ({wpm}) => wpm) - 10), max(data, ({wpm}) => wpm) + 10])
       .range([300 - margin.top - margin.bottom, 0])
     const wpmVsTime = line()
       .curve(curveMonotoneX)
@@ -52,8 +52,8 @@ export default class Chart extends Component {
     //  .y(({raw}) => y(raw))
     const svg = create('svg').attr('viewBox', '0 0 800 300')
     svg.append('path')
+      .classed('line-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-      .attr('stroke', 'black')
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
       .attr('fill', 'none')
@@ -66,21 +66,23 @@ export default class Chart extends Component {
     //  .attr('fill', 'none')
     //  .attr('d', rawVsTime(data))
     svg.append('g')
+      .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
       .call(axisBottom(x))
     svg.append('g')
+      .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .call(axisLeft(y))
-    svg.append('g')
-      .selectAll('point')
-      .data(data)
-      .enter()
-      .append('circle')
-        .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-        .attr('cx', ({time}) => x(time))
-        .attr('cy', ({wpm}) => y(wpm))
-        .attr('r', 3)
-        .attr('fill', 'black')
+    //svg.append('g')
+    //  .selectAll('point')
+    //  .data(data)
+    //  .enter()
+    //  .append('circle')
+    //    .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+    //    .attr('cx', ({time}) => x(time))
+    //    .attr('cy', ({wpm}) => y(wpm))
+    //    .attr('r', 3)
+    //    .attr('fill', 'black')
     this.setInnerHTML('')
     this.appendChild(svg.node())
   }

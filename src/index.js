@@ -1,7 +1,6 @@
 import './scss/index.scss'
 
 import {
-  EventComplete,
   EventNext,
   EventReset,
   emit,
@@ -62,10 +61,6 @@ function main() {
     while (i === j) i = randomText()
     goToText(i)
     emit(EventReset, {text: texts[i]})
-  })
-
-  listen(EventComplete, ({endState}) => {
-    console.log(endState)
   })
 
   // WPM at entry
