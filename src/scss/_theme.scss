@@ -49,10 +49,18 @@
 
     .line-wpm {
       stroke: $cursor-color;
+      fill: none;
     }
 
-    .line-raw {
-      stroke: $text-color;
+    .area-wpm {
+      stroke: none;
+      fill: $cursor-color;
+      fill-opacity: 0.1;
+    }
+
+    .point {
+      stroke: $cursor-color;
+      fill: $background-color;
     }
 
     .axis {

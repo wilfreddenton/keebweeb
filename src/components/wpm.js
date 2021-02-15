@@ -2,9 +2,6 @@ import { EntryType, isUndefined } from '../utils'
 
 import Component from './component'
 
-const toSeconds = 1000
-const toMins = toSeconds * 60
-
 export default class WPM extends Component {
   static initialState = {wpm: 0}
 
@@ -39,9 +36,10 @@ export default class WPM extends Component {
     if (this._timeStart === null) {
       this._timeStart = time
     } else {
-      const numMins = (time - this._timeStart) / toMins
-      const grossWPM = Math.round(((this._numEntries - 1) / 5) / numMins)
-      wpm = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
+      wpm = Math.max(0, Math.round(
+        ((this._numEntries - 1 - this._numErrors) * 1000 * 60)
+        / (5 * (time - this._timeStart))
+      ))
     }
     this.setState({wpm})
     return wpm
