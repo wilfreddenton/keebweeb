@@ -12,7 +12,6 @@ export default class WPM extends Component {
     super(element, WPM.initialState, {
       _timeStart: null,
       _timePrev: null,
-      _timeBetweenSum: 0,
       _numCorrect: 0,
       _numEntries: 0,
       _numErrors: 0
@@ -44,13 +43,10 @@ export default class WPM extends Component {
       this._timePrev = time
     } else {
       if (entryType === EntryType.correct) {
-        this._timeBetweenSum += time - this._timePrev
+        const timeBetween = Math.max(1, time - this._timePrev)
         this._timePrev = time
-      }
-      if ((this._numCorrect - 1) % 5 === 0) {
-        raw = Math.round(1 / (this._timeBetweenSum / toMins))
+        raw = Math.round(1 / ((timeBetween * 5) / toMins))
         this.setState({raw})
-        this._timeBetweenSum = 0
       }
 
       const numMins = (time - this._timeStart) / toMins

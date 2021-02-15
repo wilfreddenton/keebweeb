@@ -1,6 +1,6 @@
 import { axisBottom, axisLeft, scaleLinear, create, line, min, max, curveMonotoneX } from 'd3'
 
-import { EventEntry, EventReset, listen } from '../events'
+import { EventComplete, EventEntry, EventReset, listen } from '../events'
 
 import Component from './component'
 
@@ -9,21 +9,28 @@ export default class Chart extends Component {
     super(element, {
       data: []
     }, {
-      _timeStart: null
+      _entry: null,
+      _interval: null
     })
 
     this._setupListeners()
   }
 
   _setupListeners() {
-    listen(EventEntry, ({wpm, raw, time}) => {
-      if (this._timeStart === null) this._timeStart = time
-      this.setState({data: [...this.state.data, {wpm, raw, time: (time - this._timeStart) / 1000}]})
+    listen(EventEntry, ({wpm, raw}) => {
+      if (this._entry === null) {
+        this._interval = setInterval(() => {
+          this.setState({data: [...this.state.data, this._entry]})
+        }, 1000)
+      }
+      this._entry = {wpm, raw, time: this.state.data.length + 1}
     })
+    listen(EventComplete, () => clearInterval(this._interval))
     listen(EventReset, this.reset.bind(this))
   }
 
   reset() {
+    clearInterval(this._interval)
     super.reset()
     this.setState({data: []})
   }
@@ -35,21 +42,24 @@ export default class Chart extends Component {
       bottom: 30,
       left: 30
     })
-    const data = this.state.data.filter(({time}) => time > 1)
+    const data = this.state.data
     const x = scaleLinear()
-      .domain([1, Math.ceil(max(data, ({time}) => time))])
+      .domain(data.length > 0 ? [1, data.length] : [])
       .range([0, 800 - margin.right - margin.left])
     const y = scaleLinear()
-      .domain([Math.max(0, min(data, ({wpm}) => wpm) - 10), max(data, ({wpm}) => wpm) + 10])
+      .domain([
+        Math.min(min(data, ({wpm}) => wpm), min(data, ({raw}) => raw)),
+        Math.max(max(data, ({wpm}) => wpm), max(data, ({raw}) => raw))
+      ])
       .range([300 - margin.top - margin.bottom, 0])
     const wpmVsTime = line()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
       .y(({wpm}) => y(wpm))
-    //const rawVsTime = line()
-    //  .curve(curveMonotoneX)
-    //  .x(({time}) => x(time))
-    //  .y(({raw}) => y(raw))
+    const rawVsTime = line()
+      .curve(curveMonotoneX)
+      .x(({time}) => x(time))
+      .y(({raw}) => y(raw))
     const svg = create('svg').attr('viewBox', '0 0 800 300')
     svg.append('path')
       .classed('line-wpm', true)
@@ -58,13 +68,13 @@ export default class Chart extends Component {
       .attr('stroke-miterlimit', '1')
       .attr('fill', 'none')
       .attr('d', wpmVsTime(data))
-    //svg.append('path')
-    //  .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-    //  .attr('stroke', 'red')
-    //  .attr('stroke-width', '1.5')
-    //  .attr('stroke-miterlimit', '1')
-    //  .attr('fill', 'none')
-    //  .attr('d', rawVsTime(data))
+    svg.append('path')
+      .classed('line-raw', true)
+      .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+      .attr('stroke-width', '1.5')
+      .attr('stroke-miterlimit', '1')
+      .attr('fill', 'none')
+      .attr('d', rawVsTime(data))
     svg.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)

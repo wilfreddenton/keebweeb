@@ -51,6 +51,10 @@
       stroke: $cursor-color;
     }
 
+    .line-raw {
+      stroke: $text-color;
+    }
+
     .axis {
       .domain, line {
         stroke: $text-color;
