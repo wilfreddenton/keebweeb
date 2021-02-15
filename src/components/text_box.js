@@ -194,8 +194,8 @@ export default class TextBox extends LinkedList {
   _entry(type) {
     const time = new Date().getTime()
     const accuracy = this._accuracy.entry(type, time)
-    const { wpm, raw }= this._wpm.entry(type, time)
-    emit(EventEntry, {type, time, wpm, raw, accuracy})
+    const wpm = this._wpm.entry(type, time)
+    emit(EventEntry, {type, time, wpm, accuracy})
   }
 
   render(prevState) {

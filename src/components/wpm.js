@@ -6,12 +6,11 @@ const toSeconds = 1000
 const toMins = toSeconds * 60
 
 export default class WPM extends Component {
-  static initialState = {raw: 0, wpm: 0}
+  static initialState = {wpm: 0}
 
   constructor(element) {
     super(element, WPM.initialState, {
       _timeStart: null,
-      _timePrev: null,
       _numCorrect: 0,
       _numEntries: 0,
       _numErrors: 0
@@ -37,24 +36,15 @@ export default class WPM extends Component {
     }
 
     let wpm = this.state.wpm
-    let raw = this.state.raw
     if (this._timeStart === null) {
       this._timeStart = time
-      this._timePrev = time
     } else {
-      if (entryType === EntryType.correct) {
-        const timeBetween = Math.max(1, time - this._timePrev)
-        this._timePrev = time
-        raw = Math.round(1 / ((timeBetween * 5) / toMins))
-        this.setState({raw})
-      }
-
       const numMins = (time - this._timeStart) / toMins
       const grossWPM = Math.round(((this._numEntries - 1) / 5) / numMins)
       wpm = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
     }
     this.setState({wpm})
-    return { wpm, raw }
+    return wpm
   }
 
   reset() {
@@ -64,7 +54,7 @@ export default class WPM extends Component {
 
   render(prevState) {
     if (isUndefined(prevState) || prevState.wpm !== this.state.wpm) {
-      this.setInnerHTML(`WPM: ${this.state.wpm} (raw: ${this.state.raw})`)
+      this.setInnerHTML(`WPM: ${this.state.wpm}`)
     }
   }
 }

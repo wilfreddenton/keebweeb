@@ -17,13 +17,13 @@ export default class Chart extends Component {
   }
 
   _setupListeners() {
-    listen(EventEntry, ({wpm, raw}) => {
+    listen(EventEntry, ({wpm}) => {
       if (this._entry === null) {
         this._interval = setInterval(() => {
           this.setState({data: [...this.state.data, this._entry]})
         }, 1000)
       }
-      this._entry = {wpm, raw, time: this.state.data.length + 1}
+      this._entry = {wpm, time: this.state.data.length + 1}
     })
     listen(EventComplete, () => clearInterval(this._interval))
     listen(EventReset, this.reset.bind(this))
@@ -47,19 +47,12 @@ export default class Chart extends Component {
       .domain(data.length > 0 ? [1, data.length] : [])
       .range([0, 800 - margin.right - margin.left])
     const y = scaleLinear()
-      .domain([
-        Math.min(min(data, ({wpm}) => wpm), min(data, ({raw}) => raw)),
-        Math.max(max(data, ({wpm}) => wpm), max(data, ({raw}) => raw))
-      ])
+      .domain([min(data, ({wpm}) => wpm), max(data, ({wpm}) => wpm)])
       .range([300 - margin.top - margin.bottom, 0])
     const wpmVsTime = line()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
       .y(({wpm}) => y(wpm))
-    const rawVsTime = line()
-      .curve(curveMonotoneX)
-      .x(({time}) => x(time))
-      .y(({raw}) => y(raw))
     const svg = create('svg').attr('viewBox', '0 0 800 300')
     svg.append('path')
       .classed('line-wpm', true)
@@ -68,13 +61,6 @@ export default class Chart extends Component {
       .attr('stroke-miterlimit', '1')
       .attr('fill', 'none')
       .attr('d', wpmVsTime(data))
-    svg.append('path')
-      .classed('line-raw', true)
-      .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-      .attr('stroke-width', '1.5')
-      .attr('stroke-miterlimit', '1')
-      .attr('fill', 'none')
-      .attr('d', rawVsTime(data))
     svg.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
