@@ -9,6 +9,7 @@ import {
 } from './events'
 
 import {
+  Chart,
   Progress,
   Select,
   TextBox,
@@ -34,6 +35,7 @@ function main() {
   new Select(document.getElementById('themes'), ['80082 Blu', 'Awaken', 'Bliss', 'Cyberspace', 'Mecha', 'Muted', 'Superuser'], 5, 'theme')
   new Progress(document.getElementById('progress'))
   new TextBox(document.getElementById('text-box'))
+  new Chart(document.getElementById('chart'))
 
   const randomText = () => Math.floor(Math.random() * texts.length)
 

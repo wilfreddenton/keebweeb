@@ -47,14 +47,15 @@ export default class WPM extends Component {
         this._timeBetweenSum += time - this._timePrev
         this._timePrev = time
       }
-      if (this._numCorrect % 5 === 0) {
+      if ((this._numCorrect - 1) % 5 === 0) {
         raw = Math.round(1 / (this._timeBetweenSum / toMins))
         this.setState({raw})
         this._timeBetweenSum = 0
       }
 
       const numMins = (time - this._timeStart) / toMins
-      const grossWPM = Math.round((this._numEntries / 5) / numMins)
+      console.log(numMins, this._numEntries)
+      const grossWPM = Math.round(((this._numEntries - 1) / 5) / numMins)
       wpm = Math.max(0, Math.round(grossWPM - this._numErrors / numMins))
     }
     this.setState({wpm})

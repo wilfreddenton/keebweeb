@@ -1,5 +1,6 @@
 import Accuracy from './accuracy'
 import CC from './cc'
+import Chart from './chart'
 import Component from './component'
 import Progress from './progress'
 import Select from './select'
@@ -8,8 +9,9 @@ import WPM from './wpm'
 
 export {
   Accuracy,
-  Component,
   CC,
+  Chart,
+  Component,
   Progress,
   Select,
   TextBox,
