@@ -74,6 +74,11 @@
       fill: $background-color;
     }
 
+    .point-error {
+      stroke: $error-color;
+      fill: $error-color;
+    }
+
     .axis {
       .domain, line {
         stroke: $text-color;

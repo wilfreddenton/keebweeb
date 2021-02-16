@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, scaleLinear, create, area, line, min, max, curveMonotoneX } from 'd3'
+import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, min, max, curveMonotoneX, format } from 'd3'
 
 import { EventComplete, EventEntry, EventReset, listen } from '../events'
 
@@ -9,11 +9,13 @@ import Component from './component'
 export default class Chart extends Component {
   constructor(element) {
     super(element, {
-      data: []
+      data: [],
+      errors: []
     }, {
       _entry: null,
       _interval: null,
-      _numEntries: 0
+      _numEntries: 0,
+      _numErrors: 0
     })
 
     this._setupListeners()
@@ -23,13 +25,22 @@ export default class Chart extends Component {
     listen(EventEntry, ({type, wpm}) => {
       if (this._entry === null) {
         this._interval = setInterval(() => {
-          this.setState({data: [...this.state.data, {...this._entry, snapWpm: this._numEntries * 12}]})
+          this.setState({
+            data: [...this.state.data, {...this._entry, snapWpm: this._numEntries * 12}],
+            errors: this.state.errors.concat(this._numErrors > 0 ? [{ numErrors: this._numErrors, time: this.state.data.length + 1 }] : [])
+          })
           this._numEntries = 0
+          this._numErrors = 0
         }, 1000)
       }
       this._entry = {wpm, time: this.state.data.length + 1}
-      if (type === EntryType.correct) {
-        this._numEntries += 1
+      switch (type) {
+        case EntryType.correct:
+          this._numEntries += 1
+          break
+        case EntryType.incorrect:
+          this._numErrors += 1
+          break
       }
     })
     listen(EventComplete, () => clearInterval(this._interval))
@@ -43,6 +54,7 @@ export default class Chart extends Component {
   }
 
   render() {
+    console.log(typeof this.state.errors)
     const margin = Object.freeze({
       top: 30,
       right: 30,
@@ -50,6 +62,7 @@ export default class Chart extends Component {
       left: 30
     })
     const data = this.state.data
+    const errors = this.state.errors
     const yMin = min(data, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm)
     const yMax = max(data, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm)
     const x = scaleLinear()
@@ -57,6 +70,9 @@ export default class Chart extends Component {
       .range([0, 800 - margin.right - margin.left])
     const y = scaleLinear()
       .domain([yMin, yMax])
+      .range([300 - margin.top - margin.bottom, 0])
+    const y1 = scaleLinear()
+      .domain([0, max(errors, ({numErrors}) => numErrors)])
       .range([300 - margin.top - margin.bottom, 0])
     const wpmVsTimeLine = line()
       .curve(curveMonotoneX)
@@ -108,6 +124,10 @@ export default class Chart extends Component {
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .call(axisLeft(y).ticks(5))
     chart.append('g')
+      .classed('axis', true)
+      .attr('transform', `translate(${800-margin.right}, ${margin.top})`)
+      .call(axisRight(y1).tickValues(y1.ticks().filter(Number.isInteger)).tickFormat(format('d')))
+    chart.append('g')
       .selectAll('point')
       .data(data)
       .enter()
@@ -116,6 +136,16 @@ export default class Chart extends Component {
         .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({wpm}) => y(wpm))
+        .attr('r', 3)
+    chart.append('g')
+      .selectAll('point-error')
+      .data(errors)
+      .enter()
+      .append('circle')
+        .classed('point-error', true)
+        .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+        .attr('cx', ({time}) => x(time))
+        .attr('cy', ({numErrors}) => y1(numErrors))
         .attr('r', 3)
 
     this.replaceInner(chart.node())
