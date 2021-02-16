@@ -48,18 +48,29 @@
     }
 
     .line-wpm {
-      stroke: $cursor-color;
+      stroke: $accent-color;
       fill: none;
     }
 
     .area-wpm {
       stroke: none;
-      fill: $cursor-color;
+      fill: $accent-color;
+      fill-opacity: 0.1;
+    }
+
+    .line-snap-wpm {
+      stroke: $text-color;
+      fill: none;
+    }
+
+    .area-snap-wpm {
+      stroke: none;
+      fill: $text-color;
       fill-opacity: 0.1;
     }
 
     .point {
-      stroke: $cursor-color;
+      stroke: $accent-color;
       fill: $background-color;
     }
 

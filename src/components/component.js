@@ -70,4 +70,12 @@ export default class Component {
   offsetTop() {
     return this._element.offsetTop
   }
+
+  replaceInner(node) {
+    if (this._element.firstChild === null) {
+      this.appendChild(node)
+    } else {
+      this._element.firstChild.replaceWith(node)
+    }
+  }
 }
