@@ -234,10 +234,7 @@ export default class TextBox extends LinkedList {
       this.state.cursor.setCursorAfter()
       emit(EventProgress, {index: this.state.cursor.index() + 1})
       this._showFullText()
-      const endState = this.reduce((endState, cc) => {
-        return {...endState, ...(cc.isIncorrect() ? {[cc.index()]: [...(isUndefined(endState[cc.index()]) ? [] : endState[cc.index()]), cc.currentChar()]} : {})}
-      }, {})
-      emit(EventComplete, {endState})
+      emit(EventComplete)
     }
 
     if (this.state.cursor !== null && prevState.length !== this.state.length) {
