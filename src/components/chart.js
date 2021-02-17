@@ -54,6 +54,8 @@ export default class Chart extends Component {
   }
 
   render() {
+    const width = 800
+    const height = 300
     const margin = Object.freeze({
       top: 30,
       right: 30,
@@ -67,13 +69,13 @@ export default class Chart extends Component {
 
     const x = scaleLinear()
       .domain(entries.length > 0 ? [1, entries.length] : [])
-      .range([0, 800 - margin.right - margin.left])
+      .range([0, width - margin.right - margin.left])
     const y = scaleLinear()
       .domain([yMin, yMax])
-      .range([300 - margin.top - margin.bottom, 0])
+      .range([height - margin.top - margin.bottom, 0])
     const y1 = scaleLinear()
       .domain([0, max(errors, ({numErrors}) => numErrors)])
-      .range([300 - margin.top - margin.bottom, 0])
+      .range([height - margin.top - margin.bottom, 0])
 
     const xAxis = () => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
     const yAxis = () => axisLeft(y).ticks(5)
@@ -101,16 +103,16 @@ export default class Chart extends Component {
 
     const chart = create('svg')
       .classed('chart', true)
-      .attr('viewBox', '0 0 800 300')
+      .attr('viewBox', `0 0 ${width} ${height}`)
 
     chart.append('g')
       .classed('grid', true)
-      .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
-      .call(xAxis().tickSize(-300 + margin.top + margin.bottom).tickFormat(''))
+      .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
+      .call(xAxis().tickSize(-height + margin.top + margin.bottom).tickFormat(''))
     chart.append('g')
       .classed('grid', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .call(yAxis().tickSize(-800 + margin.right + margin.left).tickFormat(''))
+      .call(yAxis().tickSize(-width + margin.right + margin.left).tickFormat(''))
 
     chart.append('path')
       .classed('line-wpm', true)
@@ -136,16 +138,33 @@ export default class Chart extends Component {
 
     chart.append('g')
       .classed('axis', true)
-      .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
+      .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
       .call(xAxis().tickFormat(format('d')))
+      .append('text')
+        .classed('axis-label', true)
+        .text('Seconds')
+        .attr('x', (width - margin.left - margin.right) / 2)
+        .attr('y', margin.bottom)
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .call(yAxis().tickFormat(format('d')))
+      .append('text')
+        .classed('axis-label', true)
+        .text('WPM')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -((height - margin.top - margin.bottom) / 2))
+        .attr('y', 0)
     chart.append('g')
       .classed('axis', true)
-      .attr('transform', `translate(${800-margin.right}, ${margin.top})`)
+      .attr('transform', `translate(${width-margin.right}, ${margin.top})`)
       .call(y1Axis().tickFormat(format('d')))
+      .append('text')
+        .classed('axis-label', true)
+        .text('Errors')
+        .attr('transform', 'rotate(90)')
+        .attr('x', ((height - margin.top - margin.bottom) / 2))
+        .attr('y', 0)
 
     chart.append('g')
       .selectAll('point')

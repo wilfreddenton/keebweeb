@@ -99,6 +99,10 @@
       text {
         color: $text-color;
       }
+
+      .axis-label {
+        fill: $text-color;
+      }
     }
   }
 }
