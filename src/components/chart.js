@@ -54,7 +54,6 @@ export default class Chart extends Component {
   }
 
   render() {
-    console.log(typeof this.state.errors)
     const margin = Object.freeze({
       top: 30,
       right: 30,
@@ -65,6 +64,7 @@ export default class Chart extends Component {
     const errors = this.state.errors
     const yMin = min(data, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm)
     const yMax = max(data, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm)
+
     const x = scaleLinear()
       .domain(data.length > 0 ? [1, data.length] : [])
       .range([0, 800 - margin.right - margin.left])
@@ -74,6 +74,11 @@ export default class Chart extends Component {
     const y1 = scaleLinear()
       .domain([0, max(errors, ({numErrors}) => numErrors)])
       .range([300 - margin.top - margin.bottom, 0])
+
+    const xAxis = () => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
+    const yAxis = () => axisLeft(y).ticks(5)
+    const y1Axis = () => axisRight(y1).tickValues(y1.ticks().filter(Number.isInteger)).tickFormat(format('d'))
+
     const wpmVsTimeLine = line()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
@@ -83,6 +88,7 @@ export default class Chart extends Component {
       .x(({time}) => x(time))
       .y0(y(yMin))
       .y1(({wpm}) => y(wpm))
+
     const snapWpmVsTimeLine = line()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
@@ -92,9 +98,20 @@ export default class Chart extends Component {
       .x(({time}) => x(time))
       .y0(y(yMin))
       .y1(({snapWpm}) => y(snapWpm))
+
     const chart = create('svg')
       .classed('chart', true)
       .attr('viewBox', '0 0 800 300')
+
+    chart.append('g')
+      .classed('grid', true)
+      .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
+      .call(xAxis().tickSize(-300 + margin.top + margin.bottom).tickFormat(''))
+    chart.append('g')
+      .classed('grid', true)
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .call(yAxis().tickSize(-800 + margin.right + margin.left).tickFormat(''))
+
     chart.append('path')
       .classed('line-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
@@ -105,6 +122,7 @@ export default class Chart extends Component {
       .classed('area-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
       .attr('d', wpmVsTimeArea(data))
+
     chart.append('path')
       .classed('line-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
@@ -115,18 +133,20 @@ export default class Chart extends Component {
       .classed('area-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
       .attr('d', snapWpmVsTimeArea(data))
+
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${300 - margin.bottom})`)
-      .call(axisBottom(x))
+      .call(xAxis().tickFormat(format('d')))
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .call(axisLeft(y).ticks(5))
+      .call(yAxis().tickFormat(format('d')))
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${800-margin.right}, ${margin.top})`)
-      .call(axisRight(y1).tickValues(y1.ticks().filter(Number.isInteger)).tickFormat(format('d')))
+      .call(y1Axis().tickFormat(format('d')))
+
     chart.append('g')
       .selectAll('point')
       .data(data)
@@ -137,6 +157,7 @@ export default class Chart extends Component {
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({wpm}) => y(wpm))
         .attr('r', 3)
+
     chart.append('g')
       .selectAll('point-error')
       .data(errors)
