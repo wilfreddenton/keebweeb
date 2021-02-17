@@ -32,14 +32,15 @@ export default class Chart extends Component {
       if (this._entry === null) {
         this._interval = setInterval(() => {
           const time = this.state.wpms.length + 1
+          const wpm = this._entry
           const snapWpm = this._numEntries * 12
           this.setState({
-            wpms: [...this.state.wpms, {time, snapWpm, wpm: this._entry}],
+            wpms: [...this.state.wpms, {time, snapWpm, wpm}],
             errors: this.state.errors.concat(this._numErrors > 0 ? [{time, numErrors: this._numErrors}] : []),
             wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
-              ? Math.min(this._entry, snapWpm)
-              : Math.min(this.state.wpmYMin, this._entry, snapWpm),
-            wpmYMax: Math.max(this.state.wpmYMax, this._entry, snapWpm),
+              ? Math.min(wpm, snapWpm)
+              : Math.min(this.state.wpmYMin, wpm, snapWpm),
+            wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm),
             errorYMax: Math.max(this.state.errorYMax, this._numErrors)
           })
           this._numEntries = 0
@@ -77,10 +78,10 @@ export default class Chart extends Component {
     const width = this.state.width
     const height = this.state.height
     const margin = Object.freeze({
-      top: 30,
-      right: 30,
-      bottom: 30,
-      left: 30
+      top: Math.round(0.05 * height),
+      right: Math.round(0.1 * width),
+      bottom: Math.round(0.15 * height),
+      left: Math.round(0.1 * width)
     })
     const wpms = this.state.wpms
     const errors = this.state.errors
@@ -162,31 +163,31 @@ export default class Chart extends Component {
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
       .call(xAxis().tickFormat(format('d')))
-      .append('text')
-        .classed('axis-label', true)
-        .text('Seconds')
-        .attr('x', (width - margin.left - margin.right) / 2)
-        .attr('y', margin.bottom)
+      //.append('text')
+      //  .classed('axis-label', true)
+      //  .text('Seconds')
+      //  .attr('x', (width - margin.left - margin.right) / 2)
+      //  .attr('y', margin.bottom)
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .call(yAxis().tickFormat(format('d')))
-      .append('text')
-        .classed('axis-label', true)
-        .text('WPM')
-        .attr('transform', 'rotate(-90)')
-        .attr('x', -((height - margin.top - margin.bottom) / 2))
-        .attr('y', 0)
+      //.append('text')
+      //  .classed('axis-label', true)
+      //  .text('WPM')
+      //  .attr('transform', 'rotate(-90)')
+      //  .attr('x', -((height - margin.top - margin.bottom) / 2))
+      //  .attr('y', -margin.left / 1.3)
     chart.append('g')
       .classed('axis', true)
       .attr('transform', `translate(${width-margin.right}, ${margin.top})`)
       .call(y1Axis().tickFormat(format('d')))
-      .append('text')
-        .classed('axis-label', true)
-        .text('Errors')
-        .attr('transform', 'rotate(90)')
-        .attr('x', ((height - margin.top - margin.bottom) / 2))
-        .attr('y', 0)
+      //.append('text')
+      //  .classed('axis-label', true)
+      //  .text('Errors')
+      //  .attr('transform', 'rotate(90)')
+      //  .attr('x', ((height - margin.top - margin.bottom) / 2))
+      //  .attr('y', -margin.right / 1.3)
 
     chart.append('g')
       .selectAll('point')
