@@ -6,6 +6,7 @@ export default class Component {
     Object.assign(this, this._initialRefs)
 
     this._resizeObserver = null
+    this._resizeObserverWidth = null
 
     this.render()
   }
@@ -89,7 +90,8 @@ export default class Component {
     }
   }
 
-  onResize(f) {
+  onResize(width, f) {
+    this._resizeObserverWidth = width
     this._resizeObserver = new ResizeObserver(([entry]) => {
       const { width } = entry.contentRect
       if (width !== this.state.width) f(width)

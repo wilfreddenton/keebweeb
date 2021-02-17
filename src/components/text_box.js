@@ -66,7 +66,7 @@ export default class TextBox extends LinkedList {
     })
     listen(EventNext, this._blur.bind(this))
     listen(EventReset, ({text}) => this.setState({text}))
-    this.onResize(width => this.setState({width}))
+    this.onResize(this.state.width, width => this.setState({width}))
   }
 
   _entryHandler(e) {

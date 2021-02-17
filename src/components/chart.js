@@ -58,7 +58,7 @@ export default class Chart extends Component {
     })
     listen(EventComplete, () => clearInterval(this._interval))
     listen(EventReset, this.reset.bind(this))
-    this.onResize(width => { this.setState({width, height: width / 2.67})})
+    this.onResize(this.state.width, width => { this.setState({width, height: width / 2.67})})
   }
 
   reset() {
