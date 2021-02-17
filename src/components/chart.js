@@ -9,7 +9,7 @@ import Component from './component'
 export default class Chart extends Component {
   constructor(element) {
     super(element, {
-      data: [],
+      entries: [],
       errors: []
     }, {
       _entry: null,
@@ -26,14 +26,14 @@ export default class Chart extends Component {
       if (this._entry === null) {
         this._interval = setInterval(() => {
           this.setState({
-            data: [...this.state.data, {...this._entry, snapWpm: this._numEntries * 12}],
-            errors: this.state.errors.concat(this._numErrors > 0 ? [{ numErrors: this._numErrors, time: this.state.data.length + 1 }] : [])
+            entries: [...this.state.entries, {...this._entry, snapWpm: this._numEntries * 12}],
+            errors: this.state.errors.concat(this._numErrors > 0 ? [{ numErrors: this._numErrors, time: this.state.entries.length + 1 }] : [])
           })
           this._numEntries = 0
           this._numErrors = 0
         }, 1000)
       }
-      this._entry = {wpm, time: this.state.data.length + 1}
+      this._entry = {wpm, time: this.state.entries.length + 1}
       switch (type) {
         case EntryType.correct:
           this._numEntries += 1
@@ -50,7 +50,7 @@ export default class Chart extends Component {
   reset() {
     clearInterval(this._interval)
     super.reset()
-    this.setState({data: []})
+    this.setState({entries: [], errors: []})
   }
 
   render() {
@@ -60,13 +60,13 @@ export default class Chart extends Component {
       bottom: 30,
       left: 30
     })
-    const data = this.state.data
+    const entries = this.state.entries
     const errors = this.state.errors
-    const yMin = min(data, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm)
-    const yMax = max(data, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm)
+    const yMin = min(entries, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm)
+    const yMax = max(entries, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm)
 
     const x = scaleLinear()
-      .domain(data.length > 0 ? [1, data.length] : [])
+      .domain(entries.length > 0 ? [1, entries.length] : [])
       .range([0, 800 - margin.right - margin.left])
     const y = scaleLinear()
       .domain([yMin, yMax])
@@ -117,22 +117,22 @@ export default class Chart extends Component {
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
-      .attr('d', wpmVsTimeLine(data))
+      .attr('d', wpmVsTimeLine(entries))
     chart.append('path')
       .classed('area-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-      .attr('d', wpmVsTimeArea(data))
+      .attr('d', wpmVsTimeArea(entries))
 
     chart.append('path')
       .classed('line-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
-      .attr('d', snapWpmVsTimeLine(data))
+      .attr('d', snapWpmVsTimeLine(entries))
     chart.append('path')
       .classed('area-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
-      .attr('d', snapWpmVsTimeArea(data))
+      .attr('d', snapWpmVsTimeArea(entries))
 
     chart.append('g')
       .classed('axis', true)
@@ -149,7 +149,7 @@ export default class Chart extends Component {
 
     chart.append('g')
       .selectAll('point')
-      .data(data)
+      .data(entries)
       .enter()
       .append('circle')
         .classed('point', true)
