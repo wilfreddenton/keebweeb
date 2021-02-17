@@ -5,6 +5,8 @@ export default class Component {
     this._initialRefs = initialRefs
     Object.assign(this, this._initialRefs)
 
+    this._resizeObserver = null
+
     this.render()
   }
 
@@ -19,6 +21,10 @@ export default class Component {
   }
 
   render() {}
+
+  applyElement(f) {
+    return f(this._element)
+  }
 
   getInnerHTML() {
     return this._element.innerHTML
@@ -71,11 +77,23 @@ export default class Component {
     return this._element.offsetTop
   }
 
+  offsetWidth() {
+    return this._element.offsetWidth
+  }
+
   replaceInner(node) {
     if (this._element.firstChild === null) {
       this.appendChild(node)
     } else {
       this._element.firstChild.replaceWith(node)
     }
+  }
+
+  onResize(f) {
+    this._resizeObserver = new ResizeObserver(([entry]) => {
+      const { width } = entry.contentRect
+      if (width !== this.state.width) f(width)
+    })
+    this._resizeObserver.observe(this._element)
   }
 }

@@ -10,7 +10,6 @@ import {
 } from '../events'
 
 import {
-  debounce,
   EntryType,
   getLineHeightRem,
   getNumLines,
@@ -28,7 +27,7 @@ import { LinkedList } from './linked_list'
 export default class TextBox extends LinkedList {
   static cursorIntervalMS = 530
 
-  constructor(element) {
+  constructor(parent) {
     super(document.createElement('div'), {
       parentHeight: null,
       shift: 0,
@@ -39,7 +38,7 @@ export default class TextBox extends LinkedList {
       text: null
     })
 
-    this._parent = element
+    this._parent = parent
     this._parent.appendChild(this._element)
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this.state.cursor.toggle(), TextBox.cursorIntervalMS]
@@ -56,9 +55,6 @@ export default class TextBox extends LinkedList {
   }
 
   _setupListeners() {
-    window.addEventListener('resize', debounce(() => this.setState({
-      width: window.innerWidth
-    }), 100))
     document.addEventListener('click', this._blur.bind(this))
     this._parent.addEventListener('click', e => {
       e.stopPropagation()
@@ -70,6 +66,7 @@ export default class TextBox extends LinkedList {
     })
     listen(EventNext, this._blur.bind(this))
     listen(EventReset, ({text}) => this.setState({text}))
+    this.onResize(width => this.setState({width}))
   }
 
   _entryHandler(e) {

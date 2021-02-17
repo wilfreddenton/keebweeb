@@ -75,7 +75,7 @@ html {
 body {
   padding: 0;
   margin: 0;
-  font-family: 'recursive', sans-serif;
+  font-family: 'Recursive', sans-serif;
 }
 
 #text-box {
@@ -84,7 +84,7 @@ body {
   margin: 3rem auto;
   background: none;
   width: 100%;
-  font-family: 'recursive', monospace;
+  font-family: 'Recursive', monospace;
   font-size: 1.5rem;
   font-variation-settings: 'MONO' 1;
   user-select: none;
@@ -112,7 +112,7 @@ body {
 }
 
 .stat {
-  font-family: 'recursive';
+  font-family: 'Recursive', sans-serif;
   font-size: 1.2rem;
   line-height: 1.5rem;
   margin-bottom: 1rem;
@@ -170,6 +170,15 @@ select {
 
 .col {
   flex-grow: 1;
+}
+
+.chart {
+  width: 100%;
+
+  text {
+    font-family: 'Recursive', sans-serif;
+    font-size: 0.75rem;
+  }
 }
 
 @media (min-width: 30rem) {

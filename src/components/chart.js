@@ -9,6 +9,8 @@ import Component from './component'
 export default class Chart extends Component {
   constructor(element) {
     super(element, {
+      width: 800,
+      height: 300,
       entries: [],
       errors: []
     }, {
@@ -45,6 +47,7 @@ export default class Chart extends Component {
     })
     listen(EventComplete, () => clearInterval(this._interval))
     listen(EventReset, this.reset.bind(this))
+    this.onResize(width => { this.setState({width, height: width / 2.67})})
   }
 
   reset() {
@@ -54,8 +57,8 @@ export default class Chart extends Component {
   }
 
   render() {
-    const width = 800
-    const height = 300
+    const width = this.state.width
+    const height = this.state.height
     const margin = Object.freeze({
       top: 30,
       right: 30,
@@ -104,6 +107,7 @@ export default class Chart extends Component {
     const chart = create('svg')
       .classed('chart', true)
       .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMinYMin meet')
 
     chart.append('g')
       .classed('grid', true)
