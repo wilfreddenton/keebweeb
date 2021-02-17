@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, min, max, curveMonotoneX, format } from 'd3'
+import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format } from 'd3'
 
 import { EventComplete, EventEntry, EventReset, listen } from '../events'
 
@@ -11,8 +11,12 @@ export default class Chart extends Component {
     super(element, {
       width: 800,
       height: 300,
-      entries: [],
-      errors: []
+      wpms: [],
+      errors: [],
+      seconds: [],
+      wpmYMin: 0,
+      wpmYMax: 0,
+      errorYMax: 0
     }, {
       _entry: null,
       _interval: null,
@@ -27,15 +31,22 @@ export default class Chart extends Component {
     listen(EventEntry, ({type, wpm}) => {
       if (this._entry === null) {
         this._interval = setInterval(() => {
+          const time = this.state.wpms.length + 1
+          const snapWpm = this._numEntries * 12
           this.setState({
-            entries: [...this.state.entries, {...this._entry, snapWpm: this._numEntries * 12}],
-            errors: this.state.errors.concat(this._numErrors > 0 ? [{ numErrors: this._numErrors, time: this.state.entries.length + 1 }] : [])
+            wpms: [...this.state.wpms, {time, snapWpm, wpm: this._entry}],
+            errors: this.state.errors.concat(this._numErrors > 0 ? [{time, numErrors: this._numErrors}] : []),
+            wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
+              ? Math.min(this._entry, snapWpm)
+              : Math.min(this.state.wpmYMin, this._entry, snapWpm),
+            wpmYMax: Math.max(this.state.wpmYMax, this._entry, snapWpm),
+            errorYMax: Math.max(this.state.errorYMax, this._numErrors)
           })
           this._numEntries = 0
           this._numErrors = 0
         }, 1000)
       }
-      this._entry = {wpm, time: this.state.entries.length + 1}
+      this._entry = wpm
       switch (type) {
         case EntryType.correct:
           this._numEntries += 1
@@ -53,7 +64,13 @@ export default class Chart extends Component {
   reset() {
     clearInterval(this._interval)
     super.reset()
-    this.setState({entries: [], errors: []})
+    this.setState({
+      wpms: [],
+      errors: [],
+      wpmYMin: 0,
+      wpmYMax: 0,
+      errorYMax: 0
+    })
   }
 
   render() {
@@ -65,19 +82,20 @@ export default class Chart extends Component {
       bottom: 30,
       left: 30
     })
-    const entries = this.state.entries
+    const wpms = this.state.wpms
     const errors = this.state.errors
-    const yMin = min(entries, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm)
-    const yMax = max(entries, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm)
+    const wpmYMin = this.state.wpmYMin
+    const wpmYMax = this.state.wpmYMax
+    const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
-      .domain(entries.length > 0 ? [1, entries.length] : [])
+      .domain(wpms.length > 0 ? [1, wpms.length] : [1, 1])
       .range([0, width - margin.right - margin.left])
     const y = scaleLinear()
-      .domain([yMin, yMax])
+      .domain([wpmYMin, wpmYMax])
       .range([height - margin.top - margin.bottom, 0])
     const y1 = scaleLinear()
-      .domain([0, max(errors, ({numErrors}) => numErrors)])
+      .domain([0, errorYMax])
       .range([height - margin.top - margin.bottom, 0])
 
     const xAxis = () => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
@@ -91,7 +109,7 @@ export default class Chart extends Component {
     const wpmVsTimeArea = area()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
-      .y0(y(yMin))
+      .y0(y(wpmYMin))
       .y1(({wpm}) => y(wpm))
 
     const snapWpmVsTimeLine = line()
@@ -101,7 +119,7 @@ export default class Chart extends Component {
     const snapWpmVsTimeArea = area()
       .curve(curveMonotoneX)
       .x(({time}) => x(time))
-      .y0(y(yMin))
+      .y0(y(wpmYMin))
       .y1(({snapWpm}) => y(snapWpm))
 
     const chart = create('svg')
@@ -123,22 +141,22 @@ export default class Chart extends Component {
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
-      .attr('d', wpmVsTimeLine(entries))
+      .attr('d', wpmVsTimeLine(wpms))
     chart.append('path')
       .classed('area-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .attr('d', wpmVsTimeArea(entries))
+      .attr('d', wpmVsTimeArea(wpms))
 
     chart.append('path')
       .classed('line-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
-      .attr('d', snapWpmVsTimeLine(entries))
+      .attr('d', snapWpmVsTimeLine(wpms))
     chart.append('path')
       .classed('area-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .attr('d', snapWpmVsTimeArea(entries))
+      .attr('d', snapWpmVsTimeArea(wpms))
 
     chart.append('g')
       .classed('axis', true)
@@ -172,14 +190,14 @@ export default class Chart extends Component {
 
     chart.append('g')
       .selectAll('point')
-      .data(entries)
+      .data(wpms)
       .enter()
       .append('circle')
         .classed('point', true)
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({wpm}) => y(wpm))
-        .attr('r', 3)
+        .attr('r', 4)
 
     chart.append('g')
       .selectAll('point-error')
@@ -190,7 +208,7 @@ export default class Chart extends Component {
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({numErrors}) => y1(numErrors))
-        .attr('r', 3)
+        .attr('r', 4)
 
     this.replaceInner(chart.node())
   }
