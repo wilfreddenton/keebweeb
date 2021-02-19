@@ -2,7 +2,7 @@ import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curve
 
 import { EventEntry, EventReset, listen } from '../events'
 
-import { EntryType } from '../utils'
+import { EntryType, isUndefined } from '../utils'
 
 import Component from './component'
 
@@ -11,15 +11,17 @@ export default class Chart extends Component {
     super(element, {
       width: 800,
       height: 300,
+      wpm: 0,
       wpms: [],
       errors: [],
       wpmYMin: 0,
       wpmYMax: 0,
+      wpmXMax: 1,
       errorYMax: 0
     }, {
       _entry: null,
       _timeStart: null,
-      _numEntries: 0,
+      _numEntries: -1,
       _numErrors: 0
     })
 
@@ -30,9 +32,17 @@ export default class Chart extends Component {
     listen(EventEntry, ({type, wpm, time}) => {
       if (this._timeStart === null) this._timeStart = time
 
-      const totalElapsed = Math.floor((time - this._timeStart) / 1000)
-      const prevElapsed = this.state.wpms.length
+      const _removeTracer = (wpms) => {
+        if (wpms.length < 1) return wpms
+        const wpm = wpms[wpms.length - 1]
+        if (!isUndefined(wpm.tracer)) return wpms.slice(0, wpms.length - 1)
+        return wpms
+      }
+      const totalElapsedFlaot = (time - this._timeStart) / 1000
+      const totalElapsed = Math.floor(totalElapsedFlaot)
+      const prevElapsed = _removeTracer(this.state.wpms).length
       const diff = totalElapsed - prevElapsed
+
       if (diff > 0) {
         const wpms = []
         const { wpm, time } = this._entry
@@ -49,8 +59,9 @@ export default class Chart extends Component {
           })
         }
         this.setState({
-          wpms: [...this.state.wpms, ...wpms],
+          wpms: [..._removeTracer(this.state.wpms), ...wpms, {wpm, snapWpm: this._numEntries * 12, time: totalElapsedFlaot, tracer: true}],
           errors: this.state.errors.concat(errors),
+          wpmXMax: totalElapsedFlaot,
           wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
             ? Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm))
             : Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), this.state.wpmYMin),
@@ -59,6 +70,12 @@ export default class Chart extends Component {
         })
         this._numEntries = 0
         this._numErrors = 0
+      } else {
+        
+        this.setState({
+          wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm: this._numEntries * 12, time: totalElapsedFlaot, tracer: true}],
+          wpmXMax: totalElapsedFlaot
+        })
       }
 
       this._entry = { wpm, time }
@@ -97,12 +114,19 @@ export default class Chart extends Component {
     })
     const wpms = this.state.wpms
     const errors = this.state.errors
-    const wpmYMin = this.state.wpmYMin
-    const wpmYMax = this.state.wpmYMax
+    const wpmXMax = this.state.wpmXMax
+    const wpmYMin = 0//this.state.wpmYMin
+    const _wpmYMax = () => {
+      const max = this.state.wpmYMax
+      if (max <= 100) return 100
+      if (max <= 150) return 150
+      return max
+    }
+    const wpmYMax = _wpmYMax()
     const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
-      .domain(wpms.length > 0 ? [1, wpms.length] : [1, 1])
+      .domain([1, wpmXMax])
       .range([0, width - margin.right - margin.left])
     const y = scaleLinear()
       .domain([wpmYMin, wpmYMax])
@@ -112,7 +136,7 @@ export default class Chart extends Component {
       .range([height - margin.top - margin.bottom, 0])
 
     const xAxis = () => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
-    const yAxis = () => axisLeft(y).ticks(5)
+    const yAxis = () => axisLeft(y).ticks(3)
     const y1Axis = () => axisRight(y1).tickValues(y1.ticks().filter(Number.isInteger)).tickFormat(format('d'))
 
     const wpmVsTimeLine = line()
