@@ -94,7 +94,8 @@ export default class Component {
     this._resizeObserverWidth = width
     this._resizeObserver = new ResizeObserver(([entry]) => {
       const { width } = entry.contentRect
-      if (width !== this.state.width) f(width)
+      if (width !== this._resizeObserverWidth) f(width)
+      this._resizeObserverWidth = width
     })
     this._resizeObserver.observe(this._element)
   }

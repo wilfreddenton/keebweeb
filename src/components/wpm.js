@@ -36,10 +36,7 @@ export default class WPM extends Component {
     if (this._timeStart === null) {
       this._timeStart = time
     } else {
-      wpm = Math.max(0, Math.round(
-        ((this._numEntries - 1 - this._numErrors) * 1000 * 60)
-        / (5 * (time - this._timeStart))
-      ))
+      wpm = Math.max(0, Math.round(((this._numEntries - 1 - this._numErrors) * 12000) / (time - this._timeStart)))
     }
     this.setState({wpm})
     return wpm

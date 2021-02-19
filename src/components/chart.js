@@ -1,6 +1,6 @@
-import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format } from 'd3'
+import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format, max, min } from 'd3'
 
-import { EventComplete, EventEntry, EventReset, listen } from '../events'
+import { EventEntry, EventReset, listen } from '../events'
 
 import { EntryType } from '../utils'
 
@@ -13,13 +13,12 @@ export default class Chart extends Component {
       height: 300,
       wpms: [],
       errors: [],
-      seconds: [],
       wpmYMin: 0,
       wpmYMax: 0,
       errorYMax: 0
     }, {
       _entry: null,
-      _interval: null,
+      _timeStart: null,
       _numEntries: 0,
       _numErrors: 0
     })
@@ -28,26 +27,41 @@ export default class Chart extends Component {
   }
 
   _setupListeners() {
-    listen(EventEntry, ({type, wpm}) => {
-      if (this._entry === null) {
-        this._interval = setInterval(() => {
-          const time = this.state.wpms.length + 1
-          const wpm = this._entry
-          const snapWpm = this._numEntries * 12
-          this.setState({
-            wpms: [...this.state.wpms, {time, snapWpm, wpm}],
-            errors: this.state.errors.concat(this._numErrors > 0 ? [{time, numErrors: this._numErrors}] : []),
-            wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
-              ? Math.min(wpm, snapWpm)
-              : Math.min(this.state.wpmYMin, wpm, snapWpm),
-            wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm),
-            errorYMax: Math.max(this.state.errorYMax, this._numErrors)
+    listen(EventEntry, ({type, wpm, time}) => {
+      if (this._timeStart === null) this._timeStart = time
+
+      const totalElapsed = Math.floor((time - this._timeStart) / 1000)
+      const prevElapsed = this.state.wpms.length
+      const diff = totalElapsed - prevElapsed
+      if (diff > 0) {
+        const wpms = []
+        const { wpm, time } = this._entry
+        const snapWpm = this._numEntries * 12
+        const errors = this._numErrors > 0 ? [{time: prevElapsed + 1, numErrors: this._numErrors}] : []
+        for (let i = 1; i <= diff; i += 1) {
+          const elapsed = time - this._timeStart
+          const newElapsed = time + i * 1000 - this._timeStart
+          const adjustedWpm = wpm * (elapsed / newElapsed)
+          wpms.push({
+            snapWpm: i === 1 ? snapWpm : 0,
+            wpm: adjustedWpm,
+            time: prevElapsed + i
           })
-          this._numEntries = 0
-          this._numErrors = 0
-        }, 1000)
+        }
+        this.setState({
+          wpms: [...this.state.wpms, ...wpms],
+          errors: this.state.errors.concat(errors),
+          wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
+            ? Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm))
+            : Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), this.state.wpmYMin),
+          wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax),
+          errorYMax: Math.max(this.state.errorYMax, this._numErrors)
+        })
+        this._numEntries = 0
+        this._numErrors = 0
       }
-      this._entry = wpm
+
+      this._entry = { wpm, time }
       switch (type) {
         case EntryType.correct:
           this._numEntries += 1
@@ -57,13 +71,11 @@ export default class Chart extends Component {
           break
       }
     })
-    listen(EventComplete, () => clearInterval(this._interval))
     listen(EventReset, this.reset.bind(this))
-    this.onResize(this.state.width, width => { this.setState({width, height: width / 2.67})})
+    this.onResize(this.state.width, width => this.setState({width, height: width / 2.67}))
   }
 
   reset() {
-    clearInterval(this._interval)
     super.reset()
     this.setState({
       wpms: [],
