@@ -83,9 +83,9 @@ export default class Chart extends Component {
         errors: this.state.errors.concat(errors),
         wpmXMax: totalElapsedFlaot,
         wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
-          ? Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm))
-          : Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), this.state.wpmYMin),
-        wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax),
+          ? Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), wpm)
+          : Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), this.state.wpmYMin, wpm),
+        wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax, wpm),
         errorYMax: Math.max(this.state.errorYMax, this._numErrors)
       })
       this._numErrors = 0
@@ -102,6 +102,7 @@ export default class Chart extends Component {
     this.setState({
       wpms: [],
       errors: [],
+      wpmXMax: 0,
       wpmYMin: 0,
       wpmYMax: 0,
       errorYMax: 0
@@ -121,27 +122,27 @@ export default class Chart extends Component {
     const errors = this.state.errors
     const wpmXMax = this.state.wpmXMax
     const wpmYMin = 0//this.state.wpmYMin
-    const _wpmYMax = () => {
+    const _wpmYMax = (x) => {
       const max = this.state.wpmYMax
       if (max <= 100) return 100
-      if (max <= 150) return 150
+      if (max <= x) return x
       return max
     }
-    const wpmYMax = _wpmYMax()
+    const wpmYMax = _wpmYMax(140)
     const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
-      .domain([1, wpmXMax])
+      .domain([1, Math.max(2, wpmXMax)])
       .range([0, width - margin.right - margin.left])
     const y = scaleLinear()
       .domain([wpmYMin, wpmYMax])
       .range([height - margin.top - margin.bottom, 0])
     const y1 = scaleLinear()
-      .domain([0, errorYMax])
+      .domain([0, Math.max(1, errorYMax)])
       .range([height - margin.top - margin.bottom, 0])
 
     const xAxis = () => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
-    const yAxis = () => axisLeft(y).ticks(3)
+    const yAxis = () => axisLeft(y).ticks(5)
     const y1Axis = () => axisRight(y1).tickValues(y1.ticks().filter(Number.isInteger)).tickFormat(format('d'))
 
     const wpmVsTimeLine = line()
@@ -179,17 +180,6 @@ export default class Chart extends Component {
       .call(yAxis().tickSize(-width + margin.right + margin.left).tickFormat(''))
 
     chart.append('path')
-      .classed('line-wpm', true)
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .attr('stroke-width', '1.5')
-      .attr('stroke-miterlimit', '1')
-      .attr('d', wpmVsTimeLine(wpms))
-    chart.append('path')
-      .classed('area-wpm', true)
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .attr('d', wpmVsTimeArea(wpms))
-
-    chart.append('path')
       .classed('line-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .attr('stroke-width', '1.5')
@@ -199,6 +189,17 @@ export default class Chart extends Component {
       .classed('area-snap-wpm', true)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .attr('d', snapWpmVsTimeArea(wpms))
+
+    chart.append('path')
+      .classed('line-wpm', true)
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .attr('stroke-width', '1.5')
+      .attr('stroke-miterlimit', '1')
+      .attr('d', wpmVsTimeLine(wpms))
+    chart.append('path')
+      .classed('area-wpm', true)
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .attr('d', wpmVsTimeArea(wpms))
 
     chart.append('g')
       .classed('axis', true)
