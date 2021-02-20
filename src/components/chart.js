@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format, max, min } from 'd3'
+import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format, max } from 'd3'
 
 import { EventEntry, EventReset, listen } from '../events'
 
@@ -13,7 +13,6 @@ export default class Chart extends Component {
       height: 300,
       wpms: [],
       errors: [],
-      wpmYMin: 0,
       wpmYMax: 0,
       wpmXMax: 1,
       errorYMax: 0
@@ -82,17 +81,15 @@ export default class Chart extends Component {
         wpms: [...currentWpms, ...wpms, {wpm, snapWpm: snapWpm, time: totalElapsedFlaot, tracer: true}],
         errors: this.state.errors.concat(errors),
         wpmXMax: totalElapsedFlaot,
-        wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
-          ? Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), wpm)
-          : Math.min(min(wpms, ({wpm, snapWpm}) => wpm < snapWpm ? wpm : snapWpm), this.state.wpmYMin, wpm),
         wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax, wpm),
         errorYMax: Math.max(this.state.errorYMax, this._numErrors)
       })
       this._numErrors = 0
     } else {
       this.setState({
-        wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm: this._snapshot.length * 12, time: totalElapsedFlaot, tracer: true}],
-        wpmXMax: totalElapsedFlaot
+        wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm, time: totalElapsedFlaot, tracer: true}],
+        wpmXMax: totalElapsedFlaot,
+        wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm)
       })
     }
   }
@@ -103,7 +100,6 @@ export default class Chart extends Component {
       wpms: [],
       errors: [],
       wpmXMax: 0,
-      wpmYMin: 0,
       wpmYMax: 0,
       errorYMax: 0
     })
@@ -121,14 +117,8 @@ export default class Chart extends Component {
     const wpms = this.state.wpms
     const errors = this.state.errors
     const wpmXMax = this.state.wpmXMax
-    const wpmYMin = 0//this.state.wpmYMin
-    const _wpmYMax = (x) => {
-      const max = this.state.wpmYMax
-      if (max <= 100) return 100
-      if (max <= x) return x
-      return max
-    }
-    const wpmYMax = _wpmYMax(140)
+    const wpmYMin = 0
+    const wpmYMax = Math.max(100, this.state.wpmYMax)
     const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
