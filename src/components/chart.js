@@ -11,7 +11,6 @@ export default class Chart extends Component {
     super(element, {
       width: 800,
       height: 300,
-      wpm: 0,
       wpms: [],
       errors: [],
       wpmYMin: 0,
@@ -20,7 +19,7 @@ export default class Chart extends Component {
       errorYMax: 0
     }, {
       _timeStart: null,
-      _numEntries: -1,
+      _snapshot: [],
       _numErrors: 0
     })
 
@@ -30,6 +29,22 @@ export default class Chart extends Component {
   _setupListeners() {
     listen(EventEntry, ({type, wpm, time}) => {
       if (this._timeStart === null) this._timeStart = time
+
+      switch (type) {
+        case EntryType.correct:
+          let i = 0
+          while (i < this._snapshot.length) {
+            if (time - this._snapshot[i] <= 1000) break
+            i += 1
+          }
+          this._snapshot = [...this._snapshot.slice(i), time]
+          break
+        case EntryType.incorrect:
+          this._numErrors += 1
+          break
+      }
+
+      console.log(this._snapshot.length)
 
       const _removeTracer = (wpms) => {
         if (wpms.length < 1) return wpms
@@ -41,16 +56,16 @@ export default class Chart extends Component {
       const totalElapsed = Math.floor(totalElapsedFlaot)
       const currentWpms = _removeTracer(this.state.wpms)
       const prevElapsed = currentWpms.length
+      const snapWpm = this._snapshot.length * 12
       const diff = totalElapsed - prevElapsed
 
       if (diff > 0) {
         const wpms = []
-        const snapWpm = this._numEntries * 12
         const errors = this._numErrors > 0 ? [{time: prevElapsed + 1, numErrors: this._numErrors}] : []
         for (let i = 1; i <= diff; i += 1) {
           const elapsed = time - this._timeStart
           const newElapsed = (prevElapsed + i) * 1000
-          const adjustedWpm = wpm * (elapsed / newElapsed)
+          const adjustedWpm = Math.floor(wpm * (elapsed / newElapsed))
           wpms.push({
             snapWpm: i === 1 ? snapWpm : 0,
             wpm: adjustedWpm,
@@ -58,7 +73,7 @@ export default class Chart extends Component {
           })
         }
         this.setState({
-          wpms: [..._removeTracer(this.state.wpms), ...wpms, {wpm, snapWpm: this._numEntries * 12, time: totalElapsedFlaot, tracer: true}],
+          wpms: [...currentWpms, ...wpms, {wpm, snapWpm: snapWpm, time: totalElapsedFlaot, tracer: true}],
           errors: this.state.errors.concat(errors),
           wpmXMax: totalElapsedFlaot,
           wpmYMin: this.state.wpmYMin === 0 && this.state.wpmYMax === 0
@@ -67,22 +82,12 @@ export default class Chart extends Component {
           wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax),
           errorYMax: Math.max(this.state.errorYMax, this._numErrors)
         })
-        this._numEntries = 0
         this._numErrors = 0
       } else {
         this.setState({
-          wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm: this._numEntries * 12, time: totalElapsedFlaot, tracer: true}],
+          wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm: this._snapshot.length * 12, time: totalElapsedFlaot, tracer: true}],
           wpmXMax: totalElapsedFlaot
         })
-      }
-
-      switch (type) {
-        case EntryType.correct:
-          this._numEntries += 1
-          break
-        case EntryType.incorrect:
-          this._numErrors += 1
-          break
       }
     })
     listen(EventReset, this.reset.bind(this))

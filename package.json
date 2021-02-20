@@ -37,7 +37,8 @@
     "extends": "eslint:recommended",
     "rules": {
       "no-fallthrough": "off",
-      "no-unexpected-multiline": "off"
+      "no-unexpected-multiline": "off",
+      "no-case-declarations": "off"
     }
   },
   "devDependencies": {
