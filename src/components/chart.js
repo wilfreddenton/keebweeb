@@ -39,17 +39,19 @@ export default class Chart extends Component {
 
     switch (type) {
       case EntryType.correct:
-        let i = 0
-        while (i < this._snapshot.length) {
-          if (time - this._snapshot[i] <= 1000) break
-          i += 1
-        }
-        this._snapshot = [...this._snapshot.slice(i), time]
+        this._snapshot.push(time)
         break
       case EntryType.incorrect:
         this._numErrors += 1
         break
     }
+
+    let i = 0
+    while (i < this._snapshot.length) {
+      if (time - this._snapshot[i] <= 1000) break
+      i += 1
+    }
+    this._snapshot = this._snapshot.slice(i)
 
     const _removeTracer = (wpms) => {
       if (wpms.length < 1) return wpms
