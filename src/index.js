@@ -50,8 +50,8 @@ function main() {
   const resetHandler = () => {
     const j = getIndex()
     const i = j < 0 ? randomText() : j
-    goToText(i)
     emit(EventReset, {text: texts[i]})
+    if (j < 0) goToText(i)
   }
   window.onpopstate = resetHandler
 
