@@ -57,10 +57,10 @@ export default class Chart extends Component {
       if (!isUndefined(wpm.tracer)) return wpms.slice(0, wpms.length - 1)
       return wpms
     }
-    const totalElapsedFlaot = (time - this._timeStart) / 1000
-    const totalElapsed = Math.floor(totalElapsedFlaot)
+    const totalElapsedFloat = (time - this._timeStart) / 1000
+    const totalElapsed = Math.floor(totalElapsedFloat)
     const currentWpms = _removeTracer(this.state.wpms)
-    const prevElapsed = currentWpms.length
+    const prevElapsed = Math.max(0, currentWpms.length - 1)
     const snapWpm = this._snapshot.length * 12
     const diff = totalElapsed - prevElapsed
 
@@ -78,19 +78,23 @@ export default class Chart extends Component {
         })
       }
       this.setState({
-        wpms: [...currentWpms, ...wpms, {wpm, snapWpm: snapWpm, time: totalElapsedFlaot, tracer: true}],
+        wpms: [...currentWpms, ...wpms, {wpm, snapWpm: snapWpm, time: totalElapsedFloat, tracer: true}],
         errors: this.state.errors.concat(errors),
-        wpmXMax: totalElapsedFlaot,
+        wpmXMax: totalElapsedFloat,
         wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax, wpm),
         errorYMax: Math.max(this.state.errorYMax, this._numErrors)
       })
       this._numErrors = 0
     } else {
-      this.setState({
-        wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm, time: totalElapsedFlaot, tracer: true}],
-        wpmXMax: totalElapsedFlaot,
-        wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm)
-      })
+      if (totalElapsedFloat === 0) {
+        this.setState({wpms: [{wpm: 0, snapWpm: 0, time: 0}]})
+      } else {
+        this.setState({
+          wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm, time: totalElapsedFloat, tracer: true}],
+          wpmXMax: totalElapsedFloat,
+          wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm)
+        })
+      }
     }
   }
 
@@ -109,7 +113,7 @@ export default class Chart extends Component {
     const width = this.state.width
     const height = this.state.height
     const margin = Object.freeze({
-      top: Math.round(0.05 * height),
+      top: Math.round(0.03 * height),
       right: Math.round(0.1 * width),
       bottom: Math.round(0.15 * height),
       left: Math.round(0.1 * width)
@@ -122,7 +126,7 @@ export default class Chart extends Component {
     const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
-      .domain([1, Math.max(2, wpmXMax)])
+      .domain([0, Math.max(1, wpmXMax)])
       .range([0, width - margin.right - margin.left])
     const y = scaleLinear()
       .domain([wpmYMin, wpmYMax])

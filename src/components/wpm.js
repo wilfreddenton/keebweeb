@@ -8,7 +8,6 @@ export default class WPM extends Component {
   constructor(element) {
     super(element, WPM.initialState, {
       _timeStart: null,
-      _numCorrect: 0,
       _numEntries: 0,
       _numErrors: 0
     })
@@ -17,8 +16,12 @@ export default class WPM extends Component {
   entry(entryType, time) {
     switch (entryType) {
       case EntryType.correct:
-        this._numCorrect += 1
-        this._numEntries += 1
+        // if the first entry is correct don't count it
+        // counting it would skew the WPM result on the
+        // second entry. It would look like the user
+        // typed 2 entries in the time it took them to
+        // type 1.
+        if (this._timeStart !== null) this._numEntries += 1
         break
       case EntryType.incorrect:
         this._numEntries += 1
@@ -36,7 +39,7 @@ export default class WPM extends Component {
     if (this._timeStart === null) {
       this._timeStart = time
     } else {
-      wpm = Math.max(0, Math.round(((this._numEntries - 1 - this._numErrors) * 12000) / (time - this._timeStart)))
+      wpm = Math.max(0, Math.round(((this._numEntries - this._numErrors) * 12000) / (time - this._timeStart)))
     }
     this.setState({wpm})
     return wpm
