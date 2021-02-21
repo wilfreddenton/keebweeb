@@ -46,6 +46,15 @@
 );
 
 @include theme.new(
+  $name: 'serika',
+  $background-color: #393b3b,
+  $text-color: #ece4d0,
+  $cursor-color: #ffcd00,
+  $error-color: #da291c,
+  $accent-color: #ffcd00,
+);
+
+@include theme.new(
   $name: 'superuser',
   $background-color: #252A36,
   $text-color: #425563,
