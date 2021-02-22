@@ -10,15 +10,6 @@
 );
 
 @include theme.new(
-  $name: 'awaken',
-  $background-color: #25252F,
-  $text-color: #E5C441,
-  $cursor-color: #24E7E8,
-  $error-color: #EA315C,
-  $accent-color: #24E7E8,
-);
-
-@include theme.new(
   $name: 'bliss',
   $background-color: #4e5156,
   $text-color: #f7f2ea,
@@ -28,21 +19,12 @@
 );
 
 @include theme.new(
-  $name: 'cyberspace',
-  $background-color: #222822,
-  $text-color: #987AD4,
-  $cursor-color: #27D27F,
-  $error-color: #AD186B,
-  $accent-color: #27D27F,
-);
-
-@include theme.new(
-  $name: 'mecha',
-  $background-color: #080808,
-  $text-color: #5E359A,
-  $cursor-color: #45CB30,
-  $error-color: #FF2811,
-  $accent-color: #EC7317,
+  $name: 'muted',
+  $background-color: #171718,
+  $text-color: #B1B3B3,
+  $cursor-color: #C5B4E3,
+  $error-color: #f9423a,
+  $accent-color: #B1E4E3,
 );
 
 @include theme.new(
@@ -57,19 +39,10 @@
 @include theme.new(
   $name: 'superuser',
   $background-color: #252A36,
-  $text-color: #425563,
+  $text-color: #658297,
   $cursor-color: #80E0A7,
   $error-color: #CF4A5D,
   $accent-color: #80E0A7,
-);
-
-@include theme.new(
-  $name: 'muted',
-  $background-color: #171718,
-  $text-color: #D9D9D6,
-  $cursor-color: #C5B4E3,
-  $error-color: #dd1126,
-  $accent-color: #B1E4E3,
 );
 
 html {
