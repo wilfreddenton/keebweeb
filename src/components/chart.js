@@ -115,7 +115,7 @@ export default class Chart extends Component {
     const width = this.state.width
     const height = this.state.height
     const margin = Object.freeze({
-      top: Math.round(0.03 * height),
+      top: Math.round(0.05 * height),
       right: Math.round(0.1 * width),
       bottom: Math.round(0.15 * height),
       left: Math.round(0.1 * width)

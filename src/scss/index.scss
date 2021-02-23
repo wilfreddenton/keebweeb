@@ -19,6 +19,17 @@
 );
 
 @include theme.new(
+  $name: 'granite',
+  $background-color: #1A1A1A,
+  $text-color: #909596,
+  //$cursor-color: #308FBC,
+  $cursor-color: #59add4,
+  $error-color: #C5464D,
+  //$accent-color: #30A577,
+  $accent-color: #5dd0a3,
+);
+
+@include theme.new(
   $name: 'muted',
   $background-color: #171718,
   $text-color: #808484,
