@@ -31,7 +31,7 @@ function main() {
   ].map(t => new Text(t))
 
   new Fade(2000)
-  new Select(document.getElementById('themes'), ['80082 Blu', 'Muted', 'Olivia', 'Serika', 'Superuser'], 5, 'theme')
+  new Select(document.getElementById('themes'), ['80082 Blu', 'Botanical', 'Muted', 'Superuser'], 2, 'theme')
   new Progress(document.getElementById('progress'))
   new TextBox(document.getElementById('text-box'))
   new Chart(document.getElementById('chart'))

@@ -10,30 +10,21 @@
 );
 
 @include theme.new(
+  $name: 'botanical',
+  $background-color: #3E5D58,
+  $text-color: #92aca0,
+  $cursor-color: #DDE5ED,
+  $error-color: #c87e74,
+  $accent-color: #DDE5ED,
+);
+
+@include theme.new(
   $name: 'muted',
   $background-color: #171718,
-  $text-color: #B1B3B3,
+  $text-color: #808484,
   $cursor-color: #C5B4E3,
   $error-color: #f9423a,
   $accent-color: #B1E4E3,
-);
-
-@include theme.new(
-  $name: 'olivia',
-  $background-color: #2b2b2b,
-  $text-color: #e1dbd1,
-  $cursor-color: #f1beb0,
-  $error-color: #ea4221,
-  $accent-color: #f1beb0,
-);
-
-@include theme.new(
-  $name: 'serika',
-  $background-color: #393b3b,
-  $text-color: #ece4d0,
-  $cursor-color: #ffcd00,
-  $error-color: #da291c,
-  $accent-color: #ffcd00,
 );
 
 @include theme.new(
