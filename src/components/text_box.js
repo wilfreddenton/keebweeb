@@ -195,7 +195,7 @@ export default class TextBox extends LinkedList {
     emit(EventEntry, {type, time, wpm, accuracy})
   }
 
-  render(prevState) {
+  render(prevState, newState) {
     if (isUndefined(prevState)) return
 
     if (prevState.isFocused !== this.state.isFocused) {
@@ -220,23 +220,22 @@ export default class TextBox extends LinkedList {
       this.style().transform = `translateY(${-this.state.shift*this._lineHeightRem}rem)`
     }
 
-    if (prevState.cursor !== this.state.cursor) {
+    if (!isUndefined(newState.cursor)) {
       this.state.cursor.setCursorBefore()
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()
       emit(EventProgress, {index: this.state.cursor.index()})
-      if (prevState.cursor !== null && prevState.cursor.isSpace()) this._scrollCursorIntoView()
+      this._scrollCursorIntoView()
+    }
+    if (this.state.cursor !== null && prevState.length !== this.state.length) {
+      this._numLines = getNumLines(this._element, this._lineHeightPx)
+      this._scrollCursorIntoView()
     }
     if (!prevState.isComplete && this.state.isComplete) {
       this.state.cursor.setCursorAfter()
       emit(EventProgress, {index: this.state.cursor.index() + 1})
       this._showFullText()
       emit(EventComplete)
-    }
-
-    if (this.state.cursor !== null && prevState.length !== this.state.length) {
-      this._numLines = getNumLines(this._element, this._lineHeightPx)
-      this._scrollCursorIntoView()
     }
 
     if (prevState.width !== this.state.width) {

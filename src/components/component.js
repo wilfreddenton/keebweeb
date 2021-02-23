@@ -14,7 +14,7 @@ export default class Component {
   setState(newState) {
     const prevState = { ...this.state }
     this.state = { ...prevState, ...newState }
-    this.render(prevState)
+    this.render(prevState, newState)
   }
 
   reset() {
