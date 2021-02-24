@@ -195,7 +195,7 @@ export default class TextBox extends LinkedList {
     emit(EventEntry, {type, time, wpm, accuracy})
   }
 
-  render(prevState, newState) {
+  render(prevState) {
     if (isUndefined(prevState)) return
 
     if (prevState.isFocused !== this.state.isFocused) {
@@ -220,7 +220,7 @@ export default class TextBox extends LinkedList {
       this.style().transform = `translateY(${-this.state.shift*this._lineHeightRem}rem)`
     }
 
-    if (!isUndefined(newState.cursor)) {
+    if (prevState.cursor !== this.state.cursor) {
       this.state.cursor.setCursorBefore()
       if (this.state.cursor.prev() !== null) this.state.cursor.prev().unsetCursor()
       if (this.state.cursor.next() !== null) this.state.cursor.next().unsetCursor()

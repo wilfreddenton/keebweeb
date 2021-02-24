@@ -1,7 +1,7 @@
 @use 'theme';
 
 @include theme.new(
-  $name: '80082-blu',
+  $name: '80082-bl00',
   $background-color: #2C2F38,
   $text-color: #6E7886,
   $cursor-color: #67C4E3,
@@ -22,10 +22,8 @@
   $name: 'granite',
   $background-color: #1A1A1A,
   $text-color: #909596,
-  //$cursor-color: #308FBC,
   $cursor-color: #59add4,
   $error-color: #C5464D,
-  //$accent-color: #30A577,
   $accent-color: #5dd0a3,
 );
 
@@ -36,6 +34,15 @@
   $cursor-color: #C5B4E3,
   $error-color: #f9423a,
   $accent-color: #B1E4E3,
+);
+
+@include theme.new(
+  $name: 'nautilus',
+  $background-color: #121726,
+  $text-color: #2c5897,
+  $cursor-color: #00a4a9,
+  $error-color: #A5252A,
+  $accent-color: #e5a100,
 );
 
 @include theme.new(
