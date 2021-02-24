@@ -115,9 +115,9 @@ export default class Chart extends Component {
     const width = this.state.width
     const height = this.state.height
     const margin = Object.freeze({
-      top: Math.round(0.05 * height),
+      top: Math.round(0.1 * height),
       right: Math.round(0.1 * width),
-      bottom: Math.round(0.15 * height),
+      bottom: Math.round(0.1 * height),
       left: Math.round(0.1 * width)
     })
     const wpms = this.state.wpms
@@ -129,13 +129,13 @@ export default class Chart extends Component {
 
     const x = scaleLinear()
       .domain([0, Math.max(1, wpmXMax)])
-      .range([0, width - margin.right - margin.left])
+      .range([margin.left, width - margin.right])
     const y = scaleLinear()
       .domain([wpmYMin, wpmYMax])
-      .range([height - margin.top - margin.bottom, 0])
+      .range([height - margin.bottom, margin.top])
     const y1 = scaleLinear()
       .domain([0, Math.max(1, errorYMax)])
-      .range([height - margin.top - margin.bottom, 0])
+      .range([height - margin.bottom, margin.top])
 
     const newXAxis = x => axisBottom(x).tickValues(x.ticks().filter(Number.isInteger)).tickFormat(format('d'))
     const newYAxis = y => axisLeft(y).ticks(5).tickFormat(format('d'))
@@ -170,18 +170,6 @@ export default class Chart extends Component {
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('preserveAspectRatio', 'xMinYMin meet')
 
-    const gridXAxis = (g, x) => g.call(newXAxis(x).tickSize(-height + margin.top + margin.bottom).tickFormat(''))
-    const gridYAxis = (g, y) => g.call(newYAxis(y).tickSize(-width + margin.right + margin.left).tickFormat(''))
-    const gridX = chart.append('g')
-      .classed('grid', true)
-      .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
-      .call(gridXAxis, x)
-    chart.append('g')
-      .classed('grid', true)
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .call(gridYAxis, y)
-
-    const bottomLeftTransform = (g, k) => g.attr('transform', `translate(${margin.left * k}, ${margin.top})`)
     const clip = { id: 'clip', href: 'url(#clip)' }
     chart.append('clipPath')
       .attr('id', clip.id)
@@ -189,32 +177,40 @@ export default class Chart extends Component {
         .attr('x', margin.left)
         .attr('y', 0)
         .attr('width', width - margin.left - margin.right)
-        .attr('height', height - margin.bottom);
+        .attr('height', height);
 
     const lineGroup = chart.append('g')
       .attr('clip-path', clip.href)
+
+    const gridXAxis = (g, x) => g.call(newXAxis(x).tickSize(-height + margin.top + margin.bottom).tickFormat(''))
+    const gridYAxis = (g, y) => g.call(newYAxis(y).tickSize(-width + margin.right + margin.left).tickFormat(''))
+
+    const gridX = lineGroup.append('g')
+      .classed('grid', true)
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(gridXAxis, x)
+    lineGroup.append('g')
+      .classed('grid', true)
+      .attr('transform', `translate(${margin.left}, 0)`)
+      .call(gridYAxis, y)
 
     const lineSnap = lineGroup.append('path')
       .classed('line-snap-wpm', true)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
       .attr('d', snapWpmVsTimeLine(wpms, x))
-      .call(bottomLeftTransform, 1)
     const areaSnap = lineGroup.append('path')
       .classed('area-snap-wpm', true)
       .attr('d', snapWpmVsTimeArea(wpms, x))
-      .call(bottomLeftTransform, 1)
 
     const lineWpm = lineGroup.append('path')
       .classed('line-wpm', true)
       .attr('stroke-width', '1.5')
       .attr('stroke-miterlimit', '1')
       .attr('d', wpmVsTimeLine(wpms, x))
-      .call(bottomLeftTransform, 1)
     const areaWpm = lineGroup.append('path')
       .classed('area-wpm', true)
       .attr('d', wpmVsTimeArea(wpms, x))
-      .call(bottomLeftTransform, 1)
 
     lineGroup.append('g')
       .selectAll('point')
@@ -225,7 +221,6 @@ export default class Chart extends Component {
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({wpm}) => y(wpm))
         .attr('r', 4)
-        .call(bottomLeftTransform, 1)
 
     lineGroup.append('g')
       .selectAll('point-error')
@@ -236,62 +231,57 @@ export default class Chart extends Component {
         .attr('cx', ({time}) => x(time))
         .attr('cy', ({numErrors}) => y1(numErrors))
         .attr('r', 4)
-        .call(bottomLeftTransform, 1)
 
     const xAxis = (g, x) => g.call(newXAxis(x))
     const yAxis = (g, y) => g.call(newYAxis(y))
     const y1Axis = (g, y) => g.call(newY1Axis(y))
     const lineXAxis = chart.append('g')
       .classed('axis', true)
-      .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
       .call(xAxis, x)
     chart.append('g')
       .classed('axis', true)
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .attr('transform', `translate(${margin.left}, 0)`)
       .call(yAxis, y)
     chart.append('g')
       .classed('axis', true)
-      .attr('transform', `translate(${width-margin.right}, ${margin.top})`)
+      .attr('transform', `translate(${width-margin.right}, 0)`)
       .call(y1Axis, y1)
 
-    chart.call(zoom()
-      .scaleExtent([1, 5])
-      .extent([[margin.left, 0], [width - margin.right, height]])
-      .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
-      .on('zoom', ({transform}) => {
-        const { k } = transform
-        const dx = transform.rescaleX(x)
-        gridX.call(gridXAxis, dx)
+    chart.append('rect')
+      .classed('zoom', true)
+      .attr('x', margin.left)
+      .attr('y', 0)
+      .attr('width', width - margin.left - margin.right)
+      .attr('height', height)
+      .call(zoom()
+        .scaleExtent([1, 5])
+        .extent([[margin.left, 0], [width - margin.right, height]])
+        .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
+        .on('zoom', ({transform}) => {
+          const dx = transform.rescaleX(x)
 
-        lineSnap
-          .attr('d', snapWpmVsTimeLine(wpms, dx))
-          .call(bottomLeftTransform, k)
-        areaSnap
-          .attr('d', snapWpmVsTimeArea(wpms, dx))
-          .call(bottomLeftTransform, k)
+          lineXAxis.call(xAxis, dx)
 
-        lineWpm
-          .attr('d', wpmVsTimeLine(wpms, dx))
-          .call(bottomLeftTransform, k)
-        areaWpm
-          .attr('d', wpmVsTimeArea(wpms, dx))
-          .call(bottomLeftTransform, k)
+          gridX.call(gridXAxis, dx)
 
-        lineGroup.selectAll('.point')
-          .data(wpms)
-          .attr('cx', ({time}) => dx(time))
-          .attr('r', 4)
-          .call(bottomLeftTransform, k)
+          lineSnap.attr('d', snapWpmVsTimeLine(wpms, dx))
+          areaSnap.attr('d', snapWpmVsTimeArea(wpms, dx))
 
-        lineGroup.selectAll('.point-error')
-          .data(errors)
-          .attr('cx', ({time}) => dx(time))
-          .attr('r', 4)
-          .call(bottomLeftTransform, k)
+          lineWpm.attr('d', wpmVsTimeLine(wpms, dx))
+          areaWpm.attr('d', wpmVsTimeArea(wpms, dx))
 
-        lineXAxis.call(xAxis, dx)
-      })
-    )
+          lineGroup.selectAll('.point')
+            .data(wpms)
+            .attr('cx', ({time}) => dx(time))
+            .attr('r', 4)
+
+          lineGroup.selectAll('.point-error')
+            .data(errors)
+            .attr('cx', ({time}) => dx(time))
+            .attr('r', 4)
+        })
+      )
 
     this.replaceInner(chart.node())
   }
