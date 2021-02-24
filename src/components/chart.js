@@ -170,8 +170,6 @@ export default class Chart extends Component {
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('preserveAspectRatio', 'xMinYMin meet')
 
-    
-
     const gridXAxis = (g, x) => g.call(newXAxis(x).tickSize(-height + margin.top + margin.bottom).tickFormat(''))
     const gridYAxis = (g, y) => g.call(newYAxis(y).tickSize(-width + margin.right + margin.left).tickFormat(''))
     const gridX = chart.append('g')
@@ -189,9 +187,9 @@ export default class Chart extends Component {
       .attr('id', clip.id)
       .append('rect')
         .attr('x', margin.left)
-        .attr('y', margin.top)
+        .attr('y', 0)
         .attr('width', width - margin.left - margin.right)
-        .attr('height', height - margin.top - margin.bottom);
+        .attr('height', height - margin.bottom);
 
     const lineGroup = chart.append('g')
       .attr('clip-path', clip.href)
@@ -218,6 +216,28 @@ export default class Chart extends Component {
       .attr('d', wpmVsTimeArea(wpms, x))
       .call(bottomLeftTransform, 1)
 
+    lineGroup.append('g')
+      .selectAll('point')
+      .data(wpms)
+      .enter()
+      .append('circle')
+        .classed('point', true)
+        .attr('cx', ({time}) => x(time))
+        .attr('cy', ({wpm}) => y(wpm))
+        .attr('r', 4)
+        .call(bottomLeftTransform, 1)
+
+    lineGroup.append('g')
+      .selectAll('point-error')
+      .data(errors)
+      .enter()
+      .append('circle')
+        .classed('point-error', true)
+        .attr('cx', ({time}) => x(time))
+        .attr('cy', ({numErrors}) => y1(numErrors))
+        .attr('r', 4)
+        .call(bottomLeftTransform, 1)
+
     const xAxis = (g, x) => g.call(newXAxis(x))
     const yAxis = (g, y) => g.call(newYAxis(y))
     const y1Axis = (g, y) => g.call(newY1Axis(y))
@@ -233,28 +253,6 @@ export default class Chart extends Component {
       .classed('axis', true)
       .attr('transform', `translate(${width-margin.right}, ${margin.top})`)
       .call(y1Axis, y1)
-
-    chart.append('g')
-      .selectAll('point')
-      .data(wpms)
-      .enter()
-      .append('circle')
-        .classed('point', true)
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .attr('cx', ({time}) => x(time))
-        .attr('cy', ({wpm}) => y(wpm))
-        .attr('r', 4)
-
-    chart.append('g')
-      .selectAll('point-error')
-      .data(errors)
-      .enter()
-      .append('circle')
-        .classed('point-error', true)
-        .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        .attr('cx', ({time}) => x(time))
-        .attr('cy', ({numErrors}) => y1(numErrors))
-        .attr('r', 4)
 
     chart.call(zoom()
       .scaleExtent([1, 5])
@@ -277,6 +275,18 @@ export default class Chart extends Component {
           .call(bottomLeftTransform, k)
         areaWpm
           .attr('d', wpmVsTimeArea(wpms, dx))
+          .call(bottomLeftTransform, k)
+
+        lineGroup.selectAll('.point')
+          .data(wpms)
+          .attr('cx', ({time}) => dx(time))
+          .attr('r', 4)
+          .call(bottomLeftTransform, k)
+
+        lineGroup.selectAll('.point-error')
+          .data(errors)
+          .attr('cx', ({time}) => dx(time))
+          .attr('r', 4)
           .call(bottomLeftTransform, k)
 
         lineXAxis.call(xAxis, dx)
