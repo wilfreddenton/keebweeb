@@ -1,10 +1,17 @@
-import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format, max, zoom } from 'd3'
+import { axisBottom, axisLeft, axisRight, scaleLinear, create, area, line, curveMonotoneX, format, max, zoom, select } from 'd3'
 
 import { EventEntry, EventReset, listen } from '../events'
 
 import { EntryType, isUndefined } from '../utils'
 
 import Component from './component'
+
+const _removeTracer = (wpms) => {
+  if (wpms.length < 1) return wpms
+  const wpm = wpms[wpms.length - 1]
+  if (!isUndefined(wpm.tracer)) return wpms.slice(0, wpms.length - 1)
+  return wpms
+}
 
 export default class Chart extends Component {
   constructor(element) {
@@ -52,13 +59,7 @@ export default class Chart extends Component {
       i += 1
     }
     this._snapshot = this._snapshot.slice(i)
-
-    const _removeTracer = (wpms) => {
-      if (wpms.length < 1) return wpms
-      const wpm = wpms[wpms.length - 1]
-      if (!isUndefined(wpm.tracer)) return wpms.slice(0, wpms.length - 1)
-      return wpms
-    }
+    
     const totalElapsedFloat = (time - this._timeStart) / 1000
     const totalElapsed = Math.floor(totalElapsedFloat)
     const currentWpms = _removeTracer(this.state.wpms)
@@ -111,13 +112,13 @@ export default class Chart extends Component {
     })
   }
 
-  render() {
+  render(prevState) {
     const width = this.state.width
     const height = this.state.height
     const margin = Object.freeze({
-      top: Math.round(0.1 * height),
+      top: Math.round(0.05 * height),
       right: Math.round(0.1 * width),
-      bottom: Math.round(0.1 * height),
+      bottom: Math.round(0.15 * height),
       left: Math.round(0.1 * width)
     })
     const wpms = this.state.wpms
@@ -165,124 +166,199 @@ export default class Chart extends Component {
       .y1(({snapWpm}) => y(snapWpm))
       (wpms)
 
-    const chart = create('svg')
-      .classed('chart', true)
-      .attr('viewBox', `0 0 ${width} ${height}`)
-      .attr('preserveAspectRatio', 'xMinYMin meet')
-
-    const clip = { id: 'clip', href: 'url(#clip)' }
-    chart.append('clipPath')
-      .attr('id', clip.id)
-      .append('rect')
-        .attr('x', margin.left)
-        .attr('y', 0)
-        .attr('width', width - margin.left - margin.right)
-        .attr('height', height);
-
-    const lineGroup = chart.append('g')
-      .attr('clip-path', clip.href)
-
     const gridXAxis = (g, x) => g.call(newXAxis(x).tickSize(-height + margin.top + margin.bottom).tickFormat(''))
     const gridYAxis = (g, y) => g.call(newYAxis(y).tickSize(-width + margin.right + margin.left).tickFormat(''))
-
-    const gridX = lineGroup.append('g')
-      .classed('grid', true)
-      .attr('transform', `translate(0, ${height - margin.bottom})`)
-      .call(gridXAxis, x)
-    lineGroup.append('g')
-      .classed('grid', true)
-      .attr('transform', `translate(${margin.left}, 0)`)
-      .call(gridYAxis, y)
-
-    const lineSnap = lineGroup.append('path')
-      .classed('line-snap-wpm', true)
-      .attr('stroke-width', '1.5')
-      .attr('stroke-miterlimit', '1')
-      .attr('d', snapWpmVsTimeLine(wpms, x))
-    const areaSnap = lineGroup.append('path')
-      .classed('area-snap-wpm', true)
-      .attr('d', snapWpmVsTimeArea(wpms, x))
-
-    const lineWpm = lineGroup.append('path')
-      .classed('line-wpm', true)
-      .attr('stroke-width', '1.5')
-      .attr('stroke-miterlimit', '1')
-      .attr('d', wpmVsTimeLine(wpms, x))
-    const areaWpm = lineGroup.append('path')
-      .classed('area-wpm', true)
-      .attr('d', wpmVsTimeArea(wpms, x))
-
-    lineGroup.append('g')
-      .selectAll('point')
-      .data(wpms)
-      .enter()
-      .append('circle')
-        .classed('point', true)
-        .attr('cx', ({time}) => x(time))
-        .attr('cy', ({wpm}) => y(wpm))
-        .attr('r', 4)
-
-    lineGroup.append('g')
-      .selectAll('point-error')
-      .data(errors)
-      .enter()
-      .append('circle')
-        .classed('point-error', true)
-        .attr('cx', ({time}) => x(time))
-        .attr('cy', ({numErrors}) => y1(numErrors))
-        .attr('r', 4)
 
     const xAxis = (g, x) => g.call(newXAxis(x))
     const yAxis = (g, y) => g.call(newYAxis(y))
     const y1Axis = (g, y) => g.call(newY1Axis(y))
-    const lineXAxis = chart.append('g')
-      .classed('axis', true)
-      .attr('transform', `translate(0, ${height - margin.bottom})`)
-      .call(xAxis, x)
-    chart.append('g')
-      .classed('axis', true)
-      .attr('transform', `translate(${margin.left}, 0)`)
-      .call(yAxis, y)
-    chart.append('g')
-      .classed('axis', true)
-      .attr('transform', `translate(${width-margin.right}, 0)`)
-      .call(y1Axis, y1)
 
-    chart.append('rect')
-      .classed('zoom', true)
-      .attr('x', margin.left)
-      .attr('y', 0)
-      .attr('width', width - margin.left - margin.right)
-      .attr('height', height)
-      .call(zoom()
-        .scaleExtent([1, 5])
-        .extent([[margin.left, 0], [width - margin.right, height]])
-        .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
-        .on('zoom', ({transform}) => {
-          const dx = transform.rescaleX(x)
+    const zoomHandler = ({transform}) => {
+      const dx = transform.rescaleX(x)
 
-          lineXAxis.call(xAxis, dx)
+      select('#axis-x').call(xAxis, dx)
 
-          gridX.call(gridXAxis, dx)
+      select('#grid-x').call(gridXAxis, dx)
 
-          lineSnap.attr('d', snapWpmVsTimeLine(wpms, dx))
-          areaSnap.attr('d', snapWpmVsTimeArea(wpms, dx))
+      select('.line-snap-wpm').attr('d', snapWpmVsTimeLine(wpms, dx))
+      select('.area-snap-wpm').attr('d', snapWpmVsTimeArea(wpms, dx))
 
-          lineWpm.attr('d', wpmVsTimeLine(wpms, dx))
-          areaWpm.attr('d', wpmVsTimeArea(wpms, dx))
+      select('.line-wpm').attr('d', wpmVsTimeLine(wpms, dx))
+      select('.area-wpm').attr('d', wpmVsTimeArea(wpms, dx))
 
-          lineGroup.selectAll('.point')
-            .data(wpms)
-            .attr('cx', ({time}) => dx(time))
-            .attr('r', 4)
+      select('#points').selectAll('.point')
+        .data(wpms)
+        .attr('cx', ({time}) => dx(time))
 
-          lineGroup.selectAll('.point-error')
-            .data(errors)
-            .attr('cx', ({time}) => dx(time))
-            .attr('r', 4)
-        })
-      )
+      select('#points-error').selectAll('.point-error')
+        .data(errors)
+        .attr('cx', ({time}) => dx(time))
+    }
 
-    this.replaceInner(chart.node())
+    if (isUndefined(prevState)) {
+      const chart = create('svg')
+        .classed('chart', true)
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('preserveAspectRatio', 'xMinYMin meet')
+
+      const clip = { id: 'clip', href: 'url(#clip)' }
+      chart.append('clipPath')
+        .attr('id', clip.id)
+        .append('rect')
+          .attr('x', margin.left)
+          .attr('y', 0)
+          .attr('width', width - margin.left - margin.right)
+          .attr('height', height);
+
+      const lineGroup = chart.append('g')
+        .attr('id', '#line-group')
+        .attr('clip-path', clip.href)
+
+      lineGroup.append('g')
+        .attr('id', 'grid-x')
+        .classed('grid', true)
+        .attr('transform', `translate(0, ${height - margin.bottom})`)
+        .call(gridXAxis, x)
+      lineGroup.append('g')
+        .attr('id', 'grid-y')
+        .classed('grid', true)
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(gridYAxis, y)
+
+      lineGroup.append('path')
+        .classed('line-snap-wpm', true)
+        .attr('stroke-width', '1.5')
+        .attr('stroke-miterlimit', '1')
+        .attr('d', snapWpmVsTimeLine(wpms, x))
+      lineGroup.append('path')
+        .classed('area-snap-wpm', true)
+        .attr('d', snapWpmVsTimeArea(wpms, x))
+
+      lineGroup.append('path')
+        .classed('line-wpm', true)
+        .attr('stroke-width', '1.5')
+        .attr('stroke-miterlimit', '1')
+        .attr('d', wpmVsTimeLine(wpms, x))
+      lineGroup.append('path')
+        .classed('area-wpm', true)
+        .attr('d', wpmVsTimeArea(wpms, x))
+
+      lineGroup.append('g')
+        .attr('id', 'points')
+        .selectAll('.point')
+        .data(wpms)
+        .enter()
+        .append('circle')
+          .classed('point', true)
+          .attr('cx', ({time}) => x(time))
+          .attr('cy', ({wpm}) => y(wpm))
+          .attr('r', 4)
+
+      lineGroup.append('g')
+        .attr('id', 'points-error')
+        .selectAll('.point-error')
+        .data(errors)
+        .enter()
+        .append('circle')
+          .classed('point-error', true)
+          .attr('cx', ({time}) => x(time))
+          .attr('cy', ({numErrors}) => y1(numErrors))
+          .attr('r', 4)
+
+      chart.append('g')
+        .classed('axis', true)
+        .attr('id', 'axis-x')
+        .attr('transform', `translate(0, ${height - margin.bottom})`)
+        .call(xAxis, x)
+      chart.append('g')
+        .classed('axis', true)
+        .attr('id', 'axis-y')
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(yAxis, y)
+      chart.append('g')
+        .classed('axis', true)
+        .attr('id', 'axis-y1')
+        .attr('transform', `translate(${width-margin.right}, 0)`)
+        .call(y1Axis, y1)
+
+      chart.append('rect')
+        .attr('id', 'zoom')
+        .attr('x', margin.left)
+        .attr('y', 0)
+        .attr('width', width - margin.left - margin.right)
+        .attr('height', height)
+        .call(zoom()
+          .scaleExtent([1, 5])
+          .extent([[margin.left, 0], [width - margin.right, height]])
+          .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
+          .on('zoom', zoomHandler))
+
+      this.replaceInner(chart.node())
+    } else {
+      select('.chart')
+        .attr('viewBox', `0 0 ${width} ${height}`)
+
+      select('#clip').select('rect')
+        .attr('x', margin.left)
+        .attr('width', width - margin.left - margin.right)
+        .attr('height', height);
+
+      select('#grid-x')
+        .attr('transform', `translate(0, ${height - margin.bottom})`)
+        .call(gridXAxis, x)
+      select('#grid-y')
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(gridYAxis, y)
+
+      select('.line-snap-wpm')
+        .attr('d', snapWpmVsTimeLine(wpms, x))
+      select('.area-snap-wpm')
+        .attr('d', snapWpmVsTimeArea(wpms, x))
+
+      select('.line-wpm')
+        .attr('d', wpmVsTimeLine(wpms, x))
+      select('.area-wpm')
+        .attr('d', wpmVsTimeArea(wpms, x))
+
+      select('#points')
+        .selectAll('.point')
+        .data(wpms)
+        .join('circle')
+          .classed('point', true)
+          .attr('r', 4)
+        .transition().duration(0)
+        .attr('cx', ({time}) => x(time))
+        .attr('cy', ({wpm}) => y(wpm))
+
+      select('#points-error')
+        .selectAll('.point-error')
+        .data(errors)
+        .join('circle')
+          .classed('point-error', true)
+          .attr('r', 4)
+        .transition().duration(0)
+        .attr('cx', ({time}) => x(time))
+        .attr('cy', ({numErrors}) => y1(numErrors))
+
+      select('#axis-x')
+        .attr('transform', `translate(0, ${height - margin.bottom})`)
+        .call(xAxis, x)
+      select('#axis-y')
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(yAxis, y)
+      select('#axis-y1')
+        .attr('transform', `translate(${width-margin.right}, 0)`)
+        .call(y1Axis, y1)
+
+      select('#zoom')
+        .attr('x', margin.left)
+        .attr('width', width - margin.left - margin.right)
+        .attr('height', height)
+        .call(zoom()
+          .scaleExtent([1, 5])
+          .extent([[margin.left, 0], [width - margin.right, height]])
+          .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
+          .on('zoom', zoomHandler))
+    }
   }
 }
