@@ -84,7 +84,7 @@ body {
   transition: height 300ms;
   overflow-y: hidden;
   overflow-wrap: break-word;
-  white-space: normal;
+  white-space: pre-wrap;
 }
 
 #text-box > div {
