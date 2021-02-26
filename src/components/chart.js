@@ -37,7 +37,7 @@ export default class Chart extends Component {
     listen(EventReset, this.reset.bind(this))
     this.onResize(this.state.width, width => this.setState({
       width,
-      height: width * this.state.height / this.state.width
+      height: Math.round(width * this.state.height / this.state.width)
     }))
   }
 

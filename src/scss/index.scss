@@ -93,6 +93,14 @@ body {
   transition: transform 300ms;
 }
 
+#fake-box {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
 #help ul li {
   list-style-type: none;
 }
@@ -177,13 +185,13 @@ select {
   }
 }
 
-@media (min-width: 30rem) {
+@media (min-width: 30em) {
   html {
     font-size: 80%;
   }
 }
 
-@media (min-width: 53rem) {
+@media (min-width: 53em) {
   html {
     font-size: 100%
   }

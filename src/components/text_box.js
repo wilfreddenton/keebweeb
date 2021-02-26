@@ -38,7 +38,10 @@ export default class TextBox extends LinkedList {
       text: null
     })
 
+    this._fakeBox = document.createElement('textarea')
+    this._fakeBox.id = 'fake-box'
     this._parent = parent
+    this._parent.appendChild(this._fakeBox)
     this._parent.appendChild(this._element)
     this._cursorInterval = null
     this._cursorIntervalParams = [() => this.state.cursor.toggle(), TextBox.cursorIntervalMS]
@@ -75,26 +78,32 @@ export default class TextBox extends LinkedList {
         e.preventDefault()
         break
       case 'Escape':
+        e.preventDefault()
         this._blur()
         break
       case 'Enter':
+        e.preventDefault()
         this._focus()
         break
       case 'Backspace':
+        e.preventDefault()
         this._input(e, this._backspaceHandler.bind(this))
         break
       case 'n':
+        e.preventDefault()
         if (!this.state.isFocused) {
           emit(EventNext)
           break
         }
       case 'r':
+        e.preventDefault()
         if (!this.state.isFocused) {
           emit(EventReset, {text: new Text(this.state.text)})
           break
         }
       default:
         if (!/^.$/.test(e.key)) break
+        e.preventDefault()
         this._input(e, this._characterHandler.bind(this))
     }
   }
@@ -195,15 +204,17 @@ export default class TextBox extends LinkedList {
     emit(EventEntry, {type, time, wpm, accuracy})
   }
 
-  render(prevState) {
+  render(prevState, deltas) {
     if (isUndefined(prevState)) return
 
-    if (prevState.isFocused !== this.state.isFocused) {
+    if (!isUndefined(deltas.isFocused)) {
       if (this.state.isFocused) {
         this._resetCursorInterval()
+        this._fakeBox.focus()
       } else {
         clearInterval(this._cursorInterval)
         this.state.cursor.hide()
+        this._fakeBox.blur()
         emit(EventTypingStop)
       }
     }

@@ -93,7 +93,7 @@ export default class Component {
   onResize(width, f) {
     this._resizeObserverWidth = width
     this._resizeObserver = new ResizeObserver(([entry]) => {
-      const { width } = entry.contentRect
+      const width = Math.round(entry.contentRect.width)
       if (width !== this._resizeObserverWidth) f(width)
       this._resizeObserverWidth = width
     })
