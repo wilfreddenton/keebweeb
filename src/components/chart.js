@@ -295,12 +295,6 @@ export default class Chart extends Component {
       .attr('transform', `translate(${width-margin.right}, 0)`)
       .call(y1Axis, y1)
 
-    select('#zoom')
-      .attr('x', margin.left)
-      .attr('width', width - margin.left - margin.right)
-      .attr('height', height)
-      .call(setupZoom)
-
     select('#points')
       .selectAll('.point')
       .data(wpms)
@@ -311,7 +305,6 @@ export default class Chart extends Component {
       )
       .attr('cx', ({time}) => x(time))
       .attr('cy', ({wpm}) => y(wpm))
-
     select('#points-error')
       .selectAll('.point-error')
       .data(errors)
@@ -322,5 +315,11 @@ export default class Chart extends Component {
       )
       .attr('cx', ({time}) => x(time))
       .attr('cy', ({numErrors}) => y1(numErrors))
+
+    select('#zoom')
+      .attr('x', margin.left)
+      .attr('width', width - margin.left - margin.right)
+      .attr('height', height)
+      .call(setupZoom)
   }
 }

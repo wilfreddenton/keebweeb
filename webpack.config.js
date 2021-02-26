@@ -24,7 +24,10 @@ module.exports = {
     }]
   },
   devtool: 'inline-source-map',
+  // https://stackoverflow.com/a/63781351/1229165
   devServer: {
+    host: '0.0.0.0',
+    disableHostCheck: true,
     contentBase: './dist'
   },
   plugins: [
