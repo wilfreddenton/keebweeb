@@ -36,11 +36,15 @@ function main() {
   new TextBox(document.getElementById('text-box'))
   new Chart(document.getElementById('chart'))
 
-  const randomText = () => Math.floor(Math.random() * texts.length)
+  const randomTextIndex = () => Math.floor(Math.random() * texts.length)
 
-  const getIndex = () => {
+  const getParams = () => {
     const params = new URLSearchParams(window.location.search)
-    return params.has('index') ? parseInt(params.get('index')) : -1
+    return {
+      index: params.has('index') ? parseInt(params.get('index')) : null,
+      text: params.has('text') ? params.get('text') : null,
+      repeat: params.has('repeat') ? parseInt(params.get('repeat')): null
+    }
   }
 
   const goToText = (i) => {
@@ -48,27 +52,34 @@ function main() {
   }
 
   const resetHandler = () => {
-    const j = getIndex()
-    const i = j < 0 ? randomText() : j
-    emit(EventReset, {text: texts[i]})
-    if (j < 0) goToText(i)
+    const { index, text, repeat } = getParams()
+    let outputText = text
+    let t = ''
+    if (text !== null) {
+      if (repeat != null) {
+        for (let i = 1; i < repeat; i += 1) {
+          outputText += ` ${text}`
+        }
+      }
+      t = new Text(outputText)
+    } else if (index != null) {
+      t = texts[index]
+    } else {
+      const i = randomTextIndex()
+      t = texts[i]
+      goToText(i)
+    }
+    emit(EventReset, {text: t})
   }
   window.onpopstate = resetHandler
 
   listen(EventNext, () => {
-    const j = getIndex()
-    let i = j
-    while (i === j) i = randomText()
+    const { index } = getParams()
+    let i = index
+    while (i === index) i = randomTextIndex()
     goToText(i)
     emit(EventReset, {text: texts[i]})
   })
-
-  // WPM at entry
-  // time of entry
-  // character entered
-  // isCorrect/isIncorrect (show character if incorrect)
-  // was entry fixed
-  // needs to show backspaces
 
   resetHandler()
 }
