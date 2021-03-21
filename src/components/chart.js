@@ -20,7 +20,6 @@ export default class Chart extends Component {
       height: 300,
       wpms: [],
       errors: [],
-      wpmYMax: 0,
       wpmXMax: 1,
       errorYMax: 0
     }, {
@@ -84,7 +83,6 @@ export default class Chart extends Component {
         wpms: [...currentWpms, ...wpms, {wpm, snapWpm: snapWpm, time: totalElapsedFloat, tracer: true}],
         errors: this.state.errors.concat(errors),
         wpmXMax: totalElapsedFloat,
-        wpmYMax: Math.max(max(wpms, ({wpm, snapWpm}) => wpm > snapWpm ? wpm : snapWpm), this.state.wpmYMax, wpm),
         errorYMax: Math.max(this.state.errorYMax, this._numErrors)
       })
       this._numErrors = 0
@@ -94,8 +92,7 @@ export default class Chart extends Component {
       } else {
         this.setState({
           wpms: [..._removeTracer(this.state.wpms), {wpm, snapWpm, time: totalElapsedFloat, tracer: true}],
-          wpmXMax: totalElapsedFloat,
-          wpmYMax: Math.max(this.state.wpmYMax, wpm, snapWpm)
+          wpmXMax: totalElapsedFloat
         })
       }
     }
@@ -107,7 +104,6 @@ export default class Chart extends Component {
       wpms: [],
       errors: [],
       wpmXMax: 0,
-      wpmYMax: 0,
       errorYMax: 0
     })
   }
@@ -125,7 +121,8 @@ export default class Chart extends Component {
     const errors = this.state.errors
     const wpmXMax = this.state.wpmXMax
     const wpmYMin = 0
-    const wpmYMax = Math.max(100, this.state.wpmYMax)
+    const defaultWpmYMax = 100
+    const wpmYMax = Math.max(defaultWpmYMax, wpms.length > 0 ? max(wpms, ({wpm, snapWpm}) => Math.max(wpm, snapWpm)) : defaultWpmYMax)
     const errorYMax = this.state.errorYMax
 
     const x = scaleLinear()
